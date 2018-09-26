@@ -55,7 +55,7 @@ def validate(trainer):
 
 def train(train_x, train_y):
     trainer = model.LinearRegression(
-            x=train_x, y=train_y, validation=True)
+            x=train_x, y=train_y, validation=False)
     
     total_epoches = 2000
     learning_rate = 1e-3

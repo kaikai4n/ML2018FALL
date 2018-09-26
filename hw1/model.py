@@ -4,10 +4,10 @@ class LinearRegression():
     def __init__(self, x=None, y=None, validation=False):
         self.x = x
         self.y = y
-        self.total_attributes = x.shape[1]
-        self._init_parameters(self.total_attributes)
         self.validation = validation
         if x is not None:
+            self.total_attributes = x.shape[1]
+            self._init_parameters(self.total_attributes)
             self._init_epoch()
     
     def _init_epoch(self):
