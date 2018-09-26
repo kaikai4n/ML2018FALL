@@ -1,6 +1,8 @@
 import load
 import model
 import numpy as np
+import args
+import os
 
 def clean_data(data):
     def _find_bound(np_array, l_num, u_num):
@@ -28,17 +30,16 @@ def clean_data(data):
         np.save(f, data_bounds)
     return data
 
-def filter_attributes(data):
-    with open('models/filtered_boolean_attributes.npy',
-            'rb') as f:
+def filter_attributes(data, filename):
+    with open(filename, 'rb') as f:
         booleans = np.load(f)
     return data[:,booleans]
 
-def preprocessing():
-    data = load.read_csv('data/train.csv')
+def preprocessing(train_filename, attributes_filename):
+    data = load.read_csv(train_filename)
     data = load.parse_csv(data)
     train_x, train_y = load.csv_to_np(data)
-    train_x = filter_attributes(train_x)
+    train_x = filter_attributes(train_x, attributes_filename)
     train_x = clean_data(train_x)
     return train_x, train_y
 
@@ -51,14 +52,27 @@ def validate(trainer):
         prediction = trainer.forward(x) 
         total_loss += np.power(prediction - y, 2)
     return total_loss/len(batches)
-    
+   
+def check_dir(dir_name):
+    if os.path.isdir(dir_name) == False:
+        os.mkdir(dir_name)
 
-def train(train_x, train_y):
+def train(train_x, train_y, args):
     trainer = model.LinearRegression(
-            x=train_x, y=train_y, validation=False)
+            x=train_x,
+            y=train_y, 
+            validation=args.validation)
     
-    total_epoches = 2000
-    learning_rate = 1e-3
+    logs_path = os.path.join('logs', args.prefix+'.log')
+    check_dir('logs')
+    check_dir('models')
+    model_path = os.path.join('models', args.prefix)
+    check_dir(model_path)
+
+    f_log = open(logs_path, 'w')
+    f_log.write('epoch, training loss, validation loss\n')
+    total_epoches = args.epoches
+    learning_rate = args.learning_rate
     adagrad_n = 0
     for epoch in range(total_epoches):
         trainer.new_epoch()
@@ -70,14 +84,21 @@ def train(train_x, train_y):
             adagrad_n += np.power(prediction - y, 2)
             grad = learning_rate * (prediction-y) / np.power(adagrad_n+1e-6, 0.5)
             trainer.backward(grad, x, grad_clip=False)
-        total_loss /= len(batches)
+        total_loss = total_loss / len(batches)
         valid = validate(trainer)
         print('epoch:%d, total loss:%.3f, validation:%.3f' 
-                % (epoch, total_loss, valid))
-        if (epoch+1) % 100 == 0:
-            trainer.save_model('models/model_e%d.npy' % (epoch+1))
+                % (epoch+1, total_loss, valid))
+        f_log.write('%d,%.3f,%.3f\n' % (epoch+1, total_loss, valid))
+        if (epoch+1) % args.save_intervals == 0:
+            trainer.save_model(
+                    os.path.join(model_path,'model_e%d.npy') % (epoch+1))
+    f_log.close()
+
 
 if __name__ == '__main__':
+    args = args.get_args()
     np.random.seed(7122)
-    train_x, train_y = preprocessing()
-    train(train_x, train_y)
+    train_x, train_y = preprocessing(
+            args.train_filename, 
+            args.attributes_filename)
+    train(train_x, train_y, args)
