@@ -5,12 +5,12 @@ import pandas
 import numpy as np
 
 def load_trainer(model_path):
-    trainer = model.LinearRegression()
+    trainer = model.LinearRegression(train=False)
     trainer.load_model(model_path)
     return trainer
 
 def filter_attributes(data):
-    with open('models/filtered_boolean_attributes.npy',
+    with open('models/attributes_PM2.5_PM10.npy',
             'rb') as f:
         booleans = np.load(f)
     return data[:,booleans]
@@ -38,7 +38,7 @@ def get_data_bounds():
     return data_bounds
 
 if __name__ == '__main__':
-    model_path = 'models/model_e2000.npy'
+    model_path = 'models/PM2.5_PM10_clip_PM2.5/model_e2000.npy'
     trainer = load_trainer(model_path)
 
     test_path = 'data/test.csv'

@@ -1,29 +1,34 @@
 import numpy as np
 
 class LinearRegression():
-    def __init__(self, x=None, y=None, validation=False):
-        self.x = x
-        self.y = y
+    def __init__(self, 
+            data=None, 
+            train=True, 
+            validation=False):
+        if train and data is None:
+            raise Exception('Training data not found error\n')
+        self.data = data
+        self.train = train
         self.validation = validation
-        if x is not None:
-            self.total_attributes = x.shape[1]
+        if train:
+            self.total_attributes = self.data[0][0].shape[0]
             self._init_parameters(self.total_attributes)
-            self._init_epoch()
-    
-    def _init_epoch(self):
-        self.batcher = Batcher(self.x, self.y,
-                9, 1, validation=self.validation)
+            self._init_batcher()
+
+    def _init_batcher(self):
+        self.batcher = Batcher(self.data,
+                validation=self.validation)
 
     def new_epoch(self):
         self.batcher.random_shuffle()
 
     def _init_parameters(self, total_attributes):
-        A = np.random.normal(0.0, 1.0, total_attributes*9)
+        A = np.random.normal(0.0, 1.0, total_attributes)
         B = np.random.normal(0.0, 1.0, 1)
         self.params = [A, B]
 
-    def get_batch(self):
-        return self.batcher.get_batch()
+    def get_data(self):
+        return self.batcher.get_data()
 
     def forward(self, x):
         return np.sum(self.params[0] * x) + self.params[1]
@@ -35,8 +40,8 @@ class LinearRegression():
         self.params[0] = self.params[0] - grad * np.array(x)
         self.params[1] -= grad
 
-    def get_validation_batch(self):
-        return self.batcher.get_validation_batch()
+    def get_validation_data(self):
+        return self.batcher.get_validation_data()
 
     def save_model(self, filename):
         with open(filename, 'wb') as f:
@@ -47,10 +52,9 @@ class LinearRegression():
             self.params = np.load(f)
 
 class Batcher():
-    def __init__(self, x, y, x_num, y_num, validation=False):
-        self.x = x
-        self.y = y
-        self.total_epoches = int((x.shape[0]/12 - 9) * 12)
+    def __init__(self, data, validation=False):
+        self.data = data
+        self.total_data = self.data.shape[0]
         self._init_shuffle()
         if validation:
             self._cut_validation(validation_rate=0.9)
@@ -58,32 +62,23 @@ class Batcher():
             self._cut_validation(validation_rate=1.0)
 
     def _cut_validation(self, validation_rate):
-        total_data = self.total_epoches
-        train_num = int(total_data * validation_rate)
-        #valid_num = total_data - train_num
-        self.permu_train_x = self.permutation[:train_num]
-        self.permu_valid_x = self.permutation[train_num:]
+        train_num = int(self.total_data * validation_rate)
+        self.permu_train = self.permutation[:train_num]
+        self.permu_valid = self.permutation[train_num:]
 
     def _init_shuffle(self):
-        permutation = np.random.permutation(self.x.shape[0])
-        self.permutation = np.array([permu_num 
-            for permu_num in permutation
-            if (permu_num+9) % 480 >= 9])
+        self.permutation = np.random.permutation(self.total_data)
 
     def random_shuffle(self):
         # shuffle training data
-        np.random.shuffle(self.permu_train_x)
+        np.random.shuffle(self.permu_train)
     
-    def get_batch(self):
-        data = [(self.x[permu_num:permu_num+9].reshape(-1),
-                self.y[permu_num+9])
-                for permu_num in self.permu_train_x]
-                # data augmentation from x/1 ~ x/20 -> 480 days
+    def get_data(self):
+        data = [self.data[permu_num]
+                for permu_num in self.permu_train]
         return data
 
-    def get_validation_batch(self):
-        data = [(self.x[permu_num:permu_num+9].reshape(-1),
-                self.y[permu_num+9])
-                for permu_num in self.permu_valid_x]
-                # data augmentation from x/1 ~ x/20 -> 480 days
+    def get_validation_data(self):
+        data = [self.data[permu_num]
+                for permu_num in self.permu_valid]
         return data

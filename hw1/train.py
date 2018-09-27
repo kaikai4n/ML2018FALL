@@ -35,17 +35,38 @@ def filter_attributes(data, filename):
         booleans = np.load(f)
     return data[:,booleans]
 
+def make_data(x, y):
+    # filter out PM2.5 with possible invalid values
+    # [2, 130]
+    data = [(x[i:i+9].reshape(-1),y[i+9])
+            for i in range(x.shape[0])
+            if (i+9) % 480 >= 9]
+    return data
+
+def filter_data(data):
+    filtered_data = [ele for ele in data
+            if ((ele[0] < 2) | (ele[0] > 130) |\
+            (ele[1] < 2) | (ele[1] > 130)).any() == False]
+    return filtered_data
+
 def preprocessing(train_filename, attributes_filename):
     data = load.read_csv(train_filename)
     data = load.parse_csv(data)
     train_x, train_y = load.csv_to_np(data)
+    # leave useful attributes
     train_x = filter_attributes(train_x, attributes_filename)
+    # using modes to modify possible invalid values
     train_x = clean_data(train_x)
-    return train_x, train_y
+    # Augment data to create full training data
+    data = make_data(train_x, train_y)
+    # filter out possible invalid data
+    # with lower and upper bounds
+    data = filter_data(data)
+    return np.array(data)
 
 def validate(trainer):
     total_loss = 0.0
-    batches = trainer.get_validation_batch()
+    batches = trainer.get_validation_data()
     if len(batches) == 0:
         return 0.0
     for x, y in batches:
@@ -57,10 +78,9 @@ def check_dir(dir_name):
     if os.path.isdir(dir_name) == False:
         os.mkdir(dir_name)
 
-def train(train_x, train_y, args):
+def train(data, args):
     trainer = model.LinearRegression(
-            x=train_x,
-            y=train_y, 
+            data=data, 
             validation=args.validation)
     
     logs_path = os.path.join('logs', args.prefix+'.log')
@@ -77,7 +97,7 @@ def train(train_x, train_y, args):
     for epoch in range(total_epoches):
         trainer.new_epoch()
         total_loss = 0.0
-        batches = trainer.get_batch()
+        batches = trainer.get_data()
         for step, (x, y) in enumerate(batches):
             prediction = trainer.forward(x) 
             total_loss += np.power(prediction - y, 2)
@@ -98,7 +118,7 @@ def train(train_x, train_y, args):
 if __name__ == '__main__':
     args = args.get_args()
     np.random.seed(7122)
-    train_x, train_y = preprocessing(
+    data = preprocessing(
             args.train_filename, 
             args.attributes_filename)
-    train(train_x, train_y, args)
+    train(data, args)
