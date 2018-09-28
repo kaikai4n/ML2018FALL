@@ -15,11 +15,14 @@ def get_args():
                     specified which attributes are used \
                     to train.')
     parser.add_argument('-e', '--epoches',
+            type=int,
             default=2000)
     parser.add_argument('-lr', '--learning_rate',
+            type=float,
             default=1e-3)
     parser.add_argument('--save_intervals',
             default=100,
+            type=int,
             help='The epoch intervals to save models')
     parser.add_argument('--prefix',
             required=True,
