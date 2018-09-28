@@ -84,21 +84,24 @@ def check_dir(dir_name):
     if os.path.isdir(dir_name) == False:
         os.mkdir(dir_name)
 
-def train(data, args):
+def train(data, 
+        validation, 
+        prefix, 
+        total_epoches, 
+        learning_rate,
+        save_intervals):
     trainer = model.LinearRegression(
             data=data, 
-            validation=args.validation)
+            validation=validation)
     
-    logs_path = os.path.join('logs', args.prefix+'.log')
+    logs_path = os.path.join('logs', prefix+'.log')
     check_dir('logs')
     check_dir('models')
-    model_path = os.path.join('models', args.prefix)
+    model_path = os.path.join('models', prefix)
     check_dir(model_path)
 
     f_log = open(logs_path, 'w')
     f_log.write('epoch, training loss, validation loss\n')
-    total_epoches = args.epoches
-    learning_rate = args.learning_rate
     adagrad_n = 0
     for epoch in range(total_epoches):
         trainer.new_epoch()
@@ -115,7 +118,7 @@ def train(data, args):
         print('epoch:%d, total loss:%.3f, validation:%.3f' 
                 % (epoch+1, total_loss, valid))
         f_log.write('%d,%.3f,%.3f\n' % (epoch+1, total_loss, valid))
-        if (epoch+1) % args.save_intervals == 0:
+        if (epoch+1) % save_intervals == 0:
             trainer.save_model(
                     os.path.join(model_path,'model_e%d.npy') % (epoch+1))
     f_log.close()
@@ -127,4 +130,9 @@ if __name__ == '__main__':
     data = preprocessing(
             args.train_filename, 
             args.attributes_filename)
-    train(data, args)
+    train(data=data, 
+        validation=args.validation, 
+        prefix=args.prefix, 
+        total_epoches=args.epoches, 
+        learning_rate=args.learning_rate,
+        save_intervals=args.save_intervals)
