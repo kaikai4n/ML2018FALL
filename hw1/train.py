@@ -33,7 +33,10 @@ def clean_data(data):
 def filter_attributes(data, filename):
     with open(filename, 'rb') as f:
         booleans = np.load(f)
-    return data[:,booleans]
+    ret_data =  data[:,booleans]
+    total_index = np.sum(booleans == True)
+    index = np.sum(booleans[:9] == True)
+    return ret_data, total_index, index
 
 def make_data(x, y):
     # filter out PM2.5 with possible invalid values
@@ -43,9 +46,10 @@ def make_data(x, y):
             if (i+9) % 480 >= 9]
     return data
 
-def filter_data(data):
+def filter_data(data, total, index):
     filtered_data = [ele for ele in data
-            if ((ele[0] < 2) | (ele[0] > 130) |\
+            if ((ele[0].reshape(-1,total)[:,index-1:index+1].reshape(-1) < 2) |\
+                    (ele[0].reshape(-1,total)[:,index-1:index+1].reshape(-1) > 130) |\
             (ele[1] < 2) | (ele[1] > 130)).any() == False]
     return filtered_data
 
@@ -54,14 +58,16 @@ def preprocessing(train_filename, attributes_filename):
     data = load.parse_csv(data)
     train_x, train_y = load.csv_to_np(data)
     # leave useful attributes
-    train_x = filter_attributes(train_x, attributes_filename)
+    train_x, total_attributes, PM25_index = \
+        filter_attributes(train_x, attributes_filename)
     # using modes to modify possible invalid values
     train_x = clean_data(train_x)
+    
     # Augment data to create full training data
     data = make_data(train_x, train_y)
     # filter out possible invalid data
     # with lower and upper bounds
-    data = filter_data(data)
+    data = filter_data(data, total_attributes, PM25_index)
     return np.array(data)
 
 def validate(trainer):
