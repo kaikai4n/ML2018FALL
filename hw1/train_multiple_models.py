@@ -3,15 +3,15 @@ import args
 import numpy as np
 import os
 
+def get_split_index(y, split_values):
+    for i, thres in enumerate(split_values):
+        if y < thres:
+            return i - 1
+    return len(split_values) - 1
+
 def split_data(data, split_values, splitted_data):
-    def _get_split_index(one_data, split_values):
-        y = one_data[1]
-        for i, thres in enumerate(split_values):
-            if y < thres:
-                return i - 1
-        return len(split_values) - 1
     for one_data in data:
-        one_index = _get_split_index(one_data, split_values)
+        one_index = get_split_index(one_data[1], split_values)
         splitted_data[one_index].append(one_data)
 
 if __name__ == '__main__':
@@ -35,4 +35,5 @@ if __name__ == '__main__':
                     'split_%d' % split_index), 
             total_epoches=args.epoches, 
             learning_rate=args.learning_rate,
-            save_intervals=args.save_intervals)
+            save_intervals=args.save_intervals,
+            params_init_model=args.params_init_model)
