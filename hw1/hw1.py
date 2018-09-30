@@ -4,6 +4,8 @@ import load
 import pandas
 import numpy as np
 import argparse
+import train_multiple_models as train_mm
+import os
 
 def load_trainer(model_path):
     trainer = model.LinearRegression(train=False)
@@ -39,9 +41,15 @@ def get_data_bounds(filename):
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model',
+    parser.add_argument('--model_main',
             required=True,
-            help='The training model parameters path')
+            help='The training model parameters path,\
+                    this is the main one.')
+    parser.add_argument('--model_minor',
+            required=True,
+            help='The training model parameters path,\
+                    this is the minor one,\
+                    a total of five small models.')
     parser.add_argument('-t','--testing_filename',
             default='data/test.csv',
             help='The testing.csv file path')
@@ -60,8 +68,15 @@ def get_args():
 
 if __name__ == '__main__':
     args = get_args()
-    model_path = args.model
-    trainer = load_trainer(model_path)
+    main_model_path = args.model_main
+    trainer = load_trainer(main_model_path)
+    
+    small_trainer = []
+    for i in range(5):
+        small_trainer.append(load_trainer(
+            os.path.join(args.model_minor, \
+                    'split_%d'%i, 'model_e4000.npy')))
+    split_values = [2, 14, 22, 30, 40, 130]
 
     test_path = args.testing_filename
     testing_data = load.load_test_csv(test_path)
@@ -74,6 +89,8 @@ if __name__ == '__main__':
     for i in range(testing_data.shape[0]):
         test_x = testing_data[i]
         prediction = trainer.forward(test_x)
-        outputs.append(['id_%d' % i, prediction[0]])
+        model_index = train_mm.get_split_index(prediction, split_values)
+        final_prediction = small_trainer[model_index].forward(test_x)
+        outputs.append(['id_%d' % i, final_prediction[0]])
     pandas.DataFrame(outputs).to_csv(output_path, 
             header=False, index=False)    
