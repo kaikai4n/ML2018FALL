@@ -91,6 +91,7 @@ if __name__ == '__main__':
         prediction = trainer.forward(test_x)
         model_index = train_mm.get_split_index(prediction, split_values)
         final_prediction = small_trainer[model_index].forward(test_x)
-        outputs.append(['id_%d' % i, final_prediction[0]])
+        final_prediction = np.mean([prediction, final_prediction])
+        outputs.append(['id_%d' % i, final_prediction])
     pandas.DataFrame(outputs).to_csv(output_path, 
             header=False, index=False)    
