@@ -94,8 +94,9 @@ if __name__ == '__main__':
         final_prediction = small_trainer[model_index].forward(test_x)
         if np.abs(prediction-final_prediction) > 5 or prediction < 2 or final_prediction < 2:
             #print('id_%d, last:%.3f, main:%.3f, minor:%.3f' % (i, test_x[-1], prediction, final_prediction))
-            final_prediction[0] = test_x[-1]
-        final_prediction = np.mean([prediction, final_prediction])
+            final_prediction = test_x[-1]
+        else:
+            final_prediction = np.mean([prediction, final_prediction])
         outputs.append(['id_%d' % i, final_prediction])
     pandas.DataFrame(outputs).to_csv(output_path, 
             header=False, index=False)    
