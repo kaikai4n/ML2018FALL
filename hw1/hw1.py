@@ -72,11 +72,12 @@ if __name__ == '__main__':
     trainer = load_trainer(main_model_path)
     
     small_trainer = []
-    for i in range(5):
+    for i in range(8):
         small_trainer.append(load_trainer(
             os.path.join(args.model_minor, \
                     'split_%d'%i, 'model_e4000.npy')))
-    split_values = [2, 14, 22, 30, 40, 130]
+    #split_values = [2, 14, 22, 30, 40, 130]
+    split_values = [2, 14, 22, 30, 40, 60, 80, 100, 130]
 
     test_path = args.testing_filename
     testing_data = load.load_test_csv(test_path)
@@ -91,6 +92,9 @@ if __name__ == '__main__':
         prediction = trainer.forward(test_x)
         model_index = train_mm.get_split_index(prediction, split_values)
         final_prediction = small_trainer[model_index].forward(test_x)
+        if np.abs(prediction-final_prediction) > 5 or prediction < 2 or final_prediction < 2:
+            #print('id_%d, last:%.3f, main:%.3f, minor:%.3f' % (i, test_x[-1], prediction, final_prediction))
+            final_prediction[0] = test_x[-1]
         final_prediction = np.mean([prediction, final_prediction])
         outputs.append(['id_%d' % i, final_prediction])
     pandas.DataFrame(outputs).to_csv(output_path, 

@@ -20,8 +20,8 @@ if __name__ == '__main__':
     data = train.preprocessing(
             args.train_filename, 
             args.attributes_filename)
-    split_values = [2, 14, 22, 30, 40, 130]
-    splitted_data = [list() for _ in range(5)]
+    split_values = [2, 14, 22, 30, 40, 60, 80, 100, 130]
+    splitted_data = [list() for _ in range(8)]
     split_data(data, split_values, splitted_data)
     
     log_path = os.path.join('logs', args.prefix)
