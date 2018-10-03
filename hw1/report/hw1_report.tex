@@ -1,0 +1,33 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage{xeCJK, float, graphicx, indentfirst}
+\usepackage[left=1in, right=1in]{geometry}
+
+\setCJKmainfont{標楷體}
+
+\author{資工四 B04902131 黃郁凱}
+\title{\vspace{-2cm} Homework 1 Report - PM2.5 Prediction}
+
+\begin{document}
+
+\maketitle
+
+\begin{enumerate}
+\item 請分別使用至少4種不同數值的learning rate進行training（其他參數需一致），對其作圖，並且討論其收斂過程差異。
+
+\item 請分別使用每筆data9小時內所有feature的一次項（含bias項）以及每筆data9小時內PM2.5的一次項（含bias項）進行training，比較並討論這兩種模型的root mean-square error（根據kaggle上的public/private score）。\par
+When I use all features to train, I get $10.06$ on public score. But, I get $7.84$ using only PM2.5 feature. The huge difference $2.22$ comes from some features, like \textbf{WIND\_DIREC} and \textbf{WD\_HR}. These features barely relate to \textbf{PM2.5} but having large invariance values such that prediction of linear regression deteriorates. Linear regression is sensitive to outlier or biased data, so those features influence the performance.\par
+To make sure that the feature indeed influece the results, I dump the parameters of linear regression and find that the average parameter values of \textbf{WIND\_DIREC} is ten times more than \textbf{PM2.5}. The results tell that before training, make sure all the feature in training data is helpful.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.4]{PM2.5.png}
+    \includegraphics[scale=0.4]{WIND_DIREC.png}
+    \caption{The plots of features: PM2.5(left), WIND\_DIREC(right) of values versus time. I can see that the values of WIND\_DIREC are large, change rapidly, and has no direct relation compared with PM2.5.}
+\end{figure}
+
+\item 請分別使用至少四種不同數值的regulization parameter λ進行training（其他參數需一至），討論及討論其RMSE(traning, testing)（testing根據kaggle上的public/private score）以及參數weight的L2 norm。
+
+\end{enumerate}
+
+\end{document}
