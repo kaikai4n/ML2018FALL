@@ -27,5 +27,10 @@ def get_args():
     parser.add_argument('--prefix',
             required=True,
             help='The prefix of saving name')
+    parser.add_argument('--params_init_model',
+            default=None,
+            type=str,
+            help='The initialization parameters \
+                    from a given model name.')
     args = parser.parse_args()
     return args
