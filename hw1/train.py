@@ -89,10 +89,14 @@ def train(data,
         prefix, 
         total_epoches, 
         learning_rate,
-        save_intervals):
+        save_intervals,
+        params_init_model=None):
     trainer = model.LinearRegression(
             data=data, 
             validation=validation)
+
+    if params_init_model is not None:
+        trainer.load_model(params_init_model)
     
     logs_path = os.path.join('logs', prefix+'.log')
     check_dir('logs')
