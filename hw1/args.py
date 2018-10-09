@@ -19,7 +19,7 @@ def get_args():
             default=2000)
     parser.add_argument('-lr', '--learning_rate',
             type=float,
-            default=1e-3)
+            default=0.005)
     parser.add_argument('--save_intervals',
             default=100,
             type=int,
