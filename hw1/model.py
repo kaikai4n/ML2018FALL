@@ -33,12 +33,20 @@ class LinearRegression():
     def forward(self, x):
         return np.sum(self.params[0] * x) + self.params[1]
 
-    def backward(self, grad, x, grad_clip=False):
+    def backward(self, grad, x, lambda_value=0.0, grad_clip=False):
         if grad_clip:
             threshold = 0.001
             grad = threshold if grad > threshold else grad
-        self.params[0] = self.params[0] - grad * np.array(x)
-        self.params[1] -= grad
+        norm = self.get_weight_norm()
+        self.params[0] = self.params[0] - grad * np.array(x) - \
+                lambda_value * norm * self.params[0]
+        self.params[1] = self.params[1] - grad -\
+                lambda_value * norm * self.params[1]
+
+    def get_weight_norm(self):
+        norm = np.linalg.norm(\
+                np.concatenate([self.params[0].reshape(-1), self.params[1]]))
+        return norm
 
     def get_validation_data(self):
         return self.batcher.get_validation_data()

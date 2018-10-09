@@ -90,7 +90,8 @@ def train(data,
         total_epoches, 
         learning_rate,
         save_intervals,
-        params_init_model=None):
+        params_init_model=None,
+        lambda_value=0.0):
     trainer = model.LinearRegression(
             data=data, 
             validation=validation)
@@ -105,23 +106,31 @@ def train(data,
     check_dir(model_path)
 
     f_log = open(logs_path, 'w')
-    f_log.write('epoch, training loss, validation loss\n')
+    f_log.write('epoch, training loss, rmse loss, validation loss\n')
     adagrad_n = 0
     for epoch in range(total_epoches):
         trainer.new_epoch()
-        total_loss = 0.0
+        total_loss, total_rmse_loss = 0.0, 0.0
         batches = trainer.get_data()
         for step, (x, y) in enumerate(batches):
-            prediction = trainer.forward(x) 
-            total_loss += np.power(prediction - y, 2)
-            adagrad_n += np.power(prediction - y, 2)
+            prediction = trainer.forward(x)
+            rmse_loss = np.power(prediction - y, 2) 
+            loss = rmse_loss + lambda_value*trainer.get_weight_norm()
+            total_loss += loss
+            total_rmse_loss += rmse_loss
+            adagrad_n += loss
             grad = learning_rate * (prediction-y) / np.power(adagrad_n+1e-6, 0.5)
-            trainer.backward(grad, x, grad_clip=False)
+            trainer.backward(grad, 
+                    x, 
+                    lambda_value=lambda_value, 
+                    grad_clip=False)
         total_loss = total_loss / len(batches)
+        total_rmse_loss = total_rmse_loss / len(batches)
         valid = validate(trainer)
-        print('epoch:%d, total loss:%.3f, validation:%.3f' 
-                % (epoch+1, total_loss, valid))
-        f_log.write('%d,%.3f,%.3f\n' % (epoch+1, total_loss, valid))
+        print('epoch:%d, total loss:%.3f, total_rmse_loss:%.3f, validation:%.3f' 
+                % (epoch+1, total_loss, total_rmse_loss, valid))
+        f_log.write('%d,%.3f,%.3f,%.3f\n' % \
+                (epoch+1, total_loss, total_rmse_loss, valid))
         if (epoch+1) % save_intervals == 0:
             trainer.save_model(
                     os.path.join(model_path,'model_e%d.npy') % (epoch+1))
@@ -139,4 +148,5 @@ if __name__ == '__main__':
         prefix=args.prefix, 
         total_epoches=args.epoches, 
         learning_rate=args.learning_rate,
-        save_intervals=args.save_intervals)
+        save_intervals=args.save_intervals,
+        lambda_value=args.lambda_value)
