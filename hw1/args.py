@@ -32,5 +32,10 @@ def get_args():
             type=str,
             help='The initialization parameters \
                     from a given model name.')
+    parser.add_argument('--lambda_value',
+            default=0.0,
+            type=float,
+            help='The regularization hyperparameter,\
+                    default=0.0')
     args = parser.parse_args()
     return args
