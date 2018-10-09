@@ -6,6 +6,7 @@ import numpy as np
 import argparse
 import train_multiple_models as train_mm
 import os
+import train
 
 def load_trainer(model_path):
     trainer = model.LinearRegression(train=False)
@@ -23,9 +24,12 @@ def clean_data(data, attributes_filename, data_bounds_filename):
     data_bounds = get_data_bounds(data_bounds_filename)
     total_testing_data = data.shape[0]
     data = data.reshape(-1, 18)
-    data = filter_attributes(data, attributes_filename)
+    data, total_attr, PM_index = \
+        train.filter_attributes(data, attributes_filename)
     for attr_index in range(data.shape[1]):
         l_bound, u_bound, middle_mean = data_bounds[attr_index]
+        if attr_index == PM_index:
+            u_bound = 200
         for i in range(data.shape[0]):
             if _check_bound(data[i][attr_index], l_bound, u_bound):
                 if i != 0:
@@ -92,9 +96,11 @@ if __name__ == '__main__':
         prediction = trainer.forward(test_x)
         model_index = train_mm.get_split_index(prediction, split_values)
         final_prediction = small_trainer[model_index].forward(test_x)
-        if np.abs(prediction-final_prediction) > 5 or prediction < 2 or final_prediction < 2:
+        if np.abs(prediction-final_prediction) > 5 or \
+                prediction < 2 or final_prediction < 2 or\
+                (test_x.reshape(9,-1)[:,-1] > 89).any():
             #print('id_%d, last:%.3f, main:%.3f, minor:%.3f' % (i, test_x[-1], prediction, final_prediction))
-            final_prediction = test_x[-1]
+            final_prediction = np.mean(test_x.reshape(9,-1)[-3:,-1])
         else:
             final_prediction = np.mean([prediction, final_prediction])
         outputs.append(['id_%d' % i, final_prediction])
