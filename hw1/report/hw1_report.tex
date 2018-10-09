@@ -1,6 +1,6 @@
 \documentclass[12pt, a4paper]{article}
 
-\usepackage{xeCJK, float, graphicx, indentfirst}
+\usepackage{xeCJK, float, graphicx, indentfirst, amsmath, amssymb, physics}
 \usepackage[left=1in, right=1in]{geometry}
 
 \setCJKmainfont{標楷體}
@@ -27,6 +27,90 @@ To make sure that the feature indeed influece the results, I dump the parameters
 \end{figure}
 
 \item 請分別使用至少四種不同數值的regulization parameter λ進行training（其他參數需一至），討論及討論其RMSE(traning, testing)（testing根據kaggle上的public/private score）以及參數weight的L2 norm。
+
+\item 
+\begin{enumerate}
+    \item Given $t_n$ is the data point of the data set $\mathcal D=\{t_1, ...,t_N \}$ . Each data point $t_n$ is associated with a weighting factor $r_n$ > 0.
+The sum-of-squares error function becomes:
+$$E_D(\mathbf w) = \frac 1 2 \sum_{n=1}^{N}r_n(t_n -\mathbf w^{\mathbf T}\mathbf x_n)^2$$
+Find the solution $\mathbf w^{*}$ that minimizes the error function.\\
+    let $R=\begin{bmatrix}r_1&0&\cdots&0\\0&r_2&\cdots&0\\ 0&\vdots&\ddots&\vdots\\ 0&0&\cdots&r_n\\\end{bmatrix}$, $T=\begin{bmatrix}t_1\\t_2\\ \vdots\\ t_n\\\end{bmatrix}$, $X=\begin{bmatrix}--x_1--\\--x_2--\\ \vdots\\ --x_n--\\\end{bmatrix}$.\\
+    Now the error function becomes $E_D(\mathbf W) = \frac{1}{2}(XW-T)^TR(XW-T)$.
+    To find minimum value, let
+    \begin{align*}
+        \nabla_{\mathbf W}E_D(\mathbf W) &= 0\\
+        &= \nabla_{\mathbf W} \frac{1}{2}(XW-T)^TR(XW-T)\\
+        &= \frac{\partial \frac{1}{2} (W^TX^TRXW - W^TX^TRT - T^TRXW + T^TRT)}{\partial \mathbf W}\\
+        &= \frac{1}{2} (2X^TRXW - X^TRT - X^TRT)\\
+        &= X^TRXW - X^TRT\\
+    \end{align*}
+    \begin{align*}
+        \Rightarrow & X^TRXW - X^TRT = 0\\
+        &W = (X^TRX)^{-1}X^TRT\\
+    \end{align*}
+    When $w^* = (X^TRX)^{-1}X^TRT$, it minimizes the error function.
+    \item Following the previous problem(4-a), if
+$$\mathbf t = [t_1 t_2 t_3] = \begin{bmatrix}
+       0  &10&5\\ 
+     \end{bmatrix},
+     \mathbf X=[\mathbf {x_1 x_2 x_3}] = \begin{bmatrix}
+       2 & 5 &5          \\[0.3em]
+       3 & 1 & 6         \\[0.3em]
+     \end{bmatrix}$$
+     $$r_1 = 2, r_2 = 1, r_3 = 3$$
+    Find the solution $\mathbf w^{*}$ .\\
+    \begin{align*}
+        w^* &= (X^TRX)^{-1}X^TRT\\
+        &= (\begin{bmatrix}2&5&5\\3&1&6\\\end{bmatrix}\begin{bmatrix}2&0&0\\0&1&0\\0&0&3\end{bmatrix}\begin{bmatrix}2&3\\5&1\\5&6\\\end{bmatrix})^{-1}\begin{bmatrix}2&5&5\\3&1&6\\\end{bmatrix}\begin{bmatrix}2&0&0\\0&1&0\\0&0&3\end{bmatrix}\begin{bmatrix}0\\10\\5\\\end{bmatrix}\\
+        &= (\begin{bmatrix}4&5&15\\6&1&18\\\end{bmatrix}\begin{bmatrix}2&3\\5&1\\5&6\\\end{bmatrix})^{-1}\begin{bmatrix}4&5&15\\6&1&18\\\end{bmatrix}\begin{bmatrix}0\\10\\5\\\end{bmatrix}\\
+        &= (\begin{bmatrix}108&107\\107&127\\\end{bmatrix})^{-1}\begin{bmatrix}125\\100\end{bmatrix}\\
+        &\approx \begin{bmatrix}2.28\\-1.14\\\end{bmatrix}\\
+    \end{align*}
+
+\end{enumerate}
+
+\item Given a linear model:
+
+$$ y(x, \mathbf w) = w_0 + \sum_{i=1}^{D}w_ix_i$$
+
+with a sum-of-squares error function:
+
+$$E(\mathbf w) = \frac 1 2 \sum_{n=1}^{N} \big(y(x_n, \mathbf w) -t_n ) \big)^2 $$
+
+where $t_n$ is the data point of the data set $\mathcal D=\{t_1, ...,t_N \}$
+
+Suppose that Gaussian noise $\epsilon_i$ with zero mean and variance $\sigma^2$ is added independently to each of the input variables $x_i$.
+By making use of $\mathbb E[\epsilon_i \epsilon_j] = \delta_{ij} \sigma^2$ and $\mathbb E[\epsilon_i] = 0$, show that minimizing $E$ averaged over the noise distribution is equivalent to minimizing the sum-of-squares error for noise-free input variables with the addition of a weight -decay regularization term, in which the bias parameter $w_0$ is omitted from the regularizer.\\
+
+\begin{align*}
+    E'(w) &= \frac{1}{2}\sum\limits^N_{n=1}(y(x_n + \epsilon_n, w) - t_n)^2\\
+    &= \frac{1}{2}\sum\limits^N_{n=1}(w_0 + \sum\limits^D_{i=1}w_i(x_i+\epsilon_{ni}) - t_n)^2\\
+    &= \frac{1}{2}\sum\limits^N_{n=1}(w_0 + \sum\limits^D_{i=1}w_ix_i +\sum\limits^D_{i=1}w_i\epsilon_{ni} - t_n)^2\\
+    &= \frac{1}{2}\sum\limits^N_{n=1}(y(x_n, w) +\sum\limits^D_{i=1}w_i\epsilon_{ni} - t_n)^2\\
+    &= \frac{1}{2}\sum\limits^N_{n=1}(y(x_n, w) - t_n)^2 + 2(y(x_n,w)-t_n)\sum\limits^D_{i=1}w_i\epsilon_{ni} + \sum\limits^D_{i=1}\sum\limits^D_{j=1}w_iw_j\epsilon_{ni}\epsilon_{nj}\\
+\end{align*}
+Take average over the noise distribution and get
+\begin{align*}
+    \mathbb{E}(E'(w)) &= \mathbb{E}\left(\frac{1}{2}\sum\limits^N_{n=1}(y(x_n, w) - t_n)^2 + 2(y(x_n,w)-t_n)\sum\limits^D_{i=1}w_i\epsilon_{ni} + \sum\limits^D_{i=1}\sum\limits^D_{j=1}w_iw_j\epsilon_{ni}\epsilon_{nj}\right)\\
+    &= \mathbb{E}\left(\frac{1}{2}\sum\limits^N_{n=1}(y(x_n, w) - t_n)^2\right) + 2(y(x_n,w)-t_n)\sum\limits^D_{i=1}w_i\mathbb{E}(\epsilon_{ni}) + \sum\limits^D_{i=1}\sum\limits^D_{j=1}w_iw_j\mathbb{E}(\epsilon_{ni}\epsilon_{nj})\\
+    &= \mathbb{E}\left(\frac{1}{2}\sum\limits^N_{n=1}(y(x_n, w) - t_n)^2\right) + 0 + \sigma^2\sum\limits^D_{i=1}\sum\limits^D_{j=1}w_iw_j\\
+    &= \mathbb{E}(E(w)) + C \|w\|_2\\
+\end{align*}
+, where $C$ is a constant.
+
+\item $\mathbf A \in \mathbb R^{n \times n},  \alpha$ is one of the elements of $\mathbf A,$ prove that
+
+$$\frac {\mathrm d} {\mathrm d \alpha } ln|\mathbf A| = Tr\bigg(\mathbf A^{-1} \frac {\mathrm d} {\mathrm d \alpha} \mathbf A \bigg) $$
+where the matrix $\mathbf A$ is a real, symmetric, non-sigular matrix.\\
+
+\begin{align*}
+    \frac{d ln|A|}{d\alpha} &= \dv{ln(det(A))}{\alpha}\\
+    &= \frac{1}{det(A)}\dv{det(A)}{\alpha}\\
+    &= \frac{1}{det(A)} \sum\limits^n_{i=1}\sum^n_{j=1}Adj(A)_{ji}(\dv{A}{\alpha})_{ij}\\
+    &= \sum\limits^n_{i=1}\sum^n_{j=1}A^{-1}_{ji}(\dv{A}{\alpha})_{ij}\\
+    &= Tr(A^{-1}\dv{A}{\alpha})\\
+\end{align*}
+
 
 \end{enumerate}
 
