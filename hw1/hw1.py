@@ -50,7 +50,7 @@ def get_args():
             help='The training model parameters path,\
                     this is the main one.')
     parser.add_argument('--model_minor',
-            required=True,
+            default=None,
             help='The training model parameters path,\
                     this is the minor one,\
                     a total of five small models.')
@@ -75,13 +75,14 @@ if __name__ == '__main__':
     main_model_path = args.model_main
     trainer = load_trainer(main_model_path)
     
-    small_trainer = []
-    for i in range(8):
-        small_trainer.append(load_trainer(
-            os.path.join(args.model_minor, \
-                    'split_%d'%i, 'model_e4000.npy')))
-    #split_values = [2, 14, 22, 30, 40, 130]
-    split_values = [2, 14, 22, 30, 40, 60, 80, 100, 130]
+    if args.model_minor is not None:
+        small_trainer = []
+        for i in range(8):
+            small_trainer.append(load_trainer(
+                os.path.join(args.model_minor, \
+                        'split_%d'%i, 'model_e1000.npy')))
+        #split_values = [2, 14, 22, 30, 40, 130]
+        split_values = [2, 14, 22, 30, 40, 60, 80, 100, 130]
 
     test_path = args.testing_filename
     testing_data = load.load_test_csv(test_path)
@@ -94,15 +95,20 @@ if __name__ == '__main__':
     for i in range(testing_data.shape[0]):
         test_x = testing_data[i]
         prediction = trainer.forward(test_x)
-        model_index = train_mm.get_split_index(prediction, split_values)
-        final_prediction = small_trainer[model_index].forward(test_x)
-        if np.abs(prediction-final_prediction) > 5 or \
-                prediction < 2 or final_prediction < 2 or\
-                (test_x.reshape(9,-1)[:,-1] > 89).any():
-            #print('id_%d, last:%.3f, main:%.3f, minor:%.3f' % (i, test_x[-1], prediction, final_prediction))
-            final_prediction = np.mean(test_x.reshape(9,-1)[-3:,-1])
+        if args.model_minor is not None:
+            model_index = train_mm.get_split_index(prediction, split_values)
+            final_prediction = small_trainer[model_index].forward(test_x)
+            if np.abs(prediction-final_prediction) > 5 or \
+                    prediction < 2 or final_prediction < 2 or\
+                    (test_x.reshape(9,-1)[:,-1] > 89).any():
+                #print('id_%d, last:[%.1f,%.1f,%.1f], main:%.3f, minor:%.3f' % (i, test_x.reshape(9,-1)[-3,-1], test_x.reshape(9,-1)[-2,-1], test_x.reshape(9,-1)[-1,-1], prediction, final_prediction))
+                #final_prediction = np.mean(np.concatenate([test_x.reshape(9,-1)[-2:,-1], prediction]))
+                #print(final_prediction)
+                final_prediction = np.mean(test_x.reshape(9,-1)[-3:,-1])
+            else:
+                final_prediction = np.mean([prediction, final_prediction])
+            outputs.append(['id_%d' % i, final_prediction])
         else:
-            final_prediction = np.mean([prediction, final_prediction])
-        outputs.append(['id_%d' % i, final_prediction])
+            outputs.append(['id_%d' % i, prediction[0]])
     pandas.DataFrame(outputs).to_csv(output_path, 
             header=False, index=False)    
