@@ -10,7 +10,8 @@ Machine Learning hw1: PM2.5
 - As TAs have regulated, I can't provide the training and testing file here.
 - Please refer to competition on Kaggle to get the data.
 ## Train main model
-- Example args: ```=
+- Example args: 
+    ```=
         python3 train.py --attributes_filename=models/attributes_2_5_6_8_9.npy --epoches=6000 --prefix=2_5_6_8_9_both_PM_lr0.005 --learning_rate=0.005 --train_filename=$train_filename
     ```
     - ``--train_filename`` is the ``train.csv`` file.
@@ -19,7 +20,8 @@ Machine Learning hw1: PM2.5
     - ``--validation`` if you want to cut validation (train:test=9:1).
     - ``--lambda_value`` is the regularization weight, better to set $1e-6$ at first if you are interested to use.
 ## Inference
-- Example args:```=
+- Example args:
+    ```=
         python3 hw1.py --model_main=models/2_5_6_8_9_both_PM_lr0.005/model_e6000.npy --attributes_filename=models/attributes_2_5_6_8_9.npy --testing_filename=$test_filename --output=$output
     ```
     - ``--model_main`` is the model path trained above.
