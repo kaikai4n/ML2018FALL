@@ -12,6 +12,9 @@ def get_args():
     parser.add_argument('--train_y_filename',
             default='data/train_y.csv',
             help='The csv file to train')
+    parser.add_argument('--test_x_filename',
+            default='data/test_x.csv',
+            help='The csv file to test.')
     parser.add_argument('--attributes_filename',
             default='models/attributes_PM2.5_PM10.npy',
             help='The filtered boolean numpy file,\
@@ -24,7 +27,7 @@ def get_args():
             type=float,
             default=0.005)
     parser.add_argument('--save_intervals',
-            default=100,
+            default=20,
             type=int,
             help='The epoch intervals to save models')
     parser.add_argument('--prefix',
@@ -48,5 +51,8 @@ def get_args():
             default=8,
             type=int,
             help='The batch size when training.')
+    parser.add_argument('--optimizer',
+            default='Adam',
+            help='The optimizer name in optimizer.py.')
     args = parser.parse_args()
     return args
