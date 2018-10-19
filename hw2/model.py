@@ -1,13 +1,11 @@
 import numpy as np
 
 class LogisticRegression():
-    def __init__(self, train_x, train_y, feature_num, optimizer):
-        self.x = train_x
-        self.y = train_y
+    def __init__(self, feature_num, optimizer=None, train=True):
         self.feature_num = feature_num
+        if train and optimizer is None:
+            raise Exception('Optimizer is required when training.')
         self._optimizer = optimizer
-        if self.x.shape[1] != feature_num:
-            raise Exception('Feature number doesn\'t match input traning data.')
         self._init_parameters()
 
     def _init_parameters(self):
@@ -35,10 +33,15 @@ class LogisticRegression():
         return -((y * np.log(x)) + \
                 (np.ones(y.shape)-y) * (np.log(np.ones(x.shape)-x)))
     
+    def count_accuracy(self, pred, y):
+        pred[pred >= 0.5] = 1.0
+        pred[pred < 0.5] = 0.0
+        return np.mean(pred.squeeze() == y.squeeze())
+
     def save_model(self, filename):
         with open(filename, 'wb') as f:
-            np.save(f, self.params)
+            np.save(f, self._weights)
 
     def load_model(self, filename):
         with open(filename, 'rb') as f:
-            self.params = np.load(f)
+            self._weights = np.load(f)
