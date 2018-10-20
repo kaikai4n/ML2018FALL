@@ -12,6 +12,9 @@ class LogisticRegression():
         self._weights = np.random.normal(0.0, 1.0, self.feature_num)
 
     def _sigmoid(self, x):
+        # Prevent overflow
+        x[x < -1e2] = -1e2
+        x[x > 1e2] = 1e2
         return 1.0/(1.0+np.exp(-x))
 
     def forward(self, x):
@@ -27,8 +30,8 @@ class LogisticRegression():
 
     def count_loss(self, x, y):
         x = x.squeeze()
-        x[x < 1e-6] = 1e-6
-        x[x > 1 - 1e-6] = 1 - 1e-6
+        x[x < 1e-8] = 1e-8
+        x[x > 1 - 1e-8] = 1 - 1e-8
         y = y.squeeze()
         return -((y * np.log(x)) + \
                 (np.ones(y.shape)-y) * (np.log(np.ones(x.shape)-x)))
