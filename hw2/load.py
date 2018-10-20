@@ -1,9 +1,11 @@
 import pandas
 import numpy as np
+import data
 
 class DataLoader():
     def __init__(self):
-        pass
+        self.data_processor = data.DataProcessor()
+
 
     def read_data(self, train_x_filename, train_y_filename, test_filename):
         train_x = self.read_csv(train_x_filename)
@@ -12,6 +14,7 @@ class DataLoader():
         all_x = train_x.append(test_x, ignore_index=True)
         all_x = self.data_processing(all_x)
         all_x = self.to_numpy(all_x)
+        all_x = self.data_processor.augment_features(all_x)
         train_x, test_x = all_x[:20000], all_x[20000:]
         return train_x, train_y, test_x
 
