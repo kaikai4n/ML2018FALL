@@ -13,10 +13,6 @@ def test(train_x_filename,
             train_x_filename, 
             train_y_filename,
             test_x_filename)
-    print(test_x.shape)
-    data_processor = data.DataProcessor()
-    test_x = data_processor.augment_features(test_x)
-    print(test_x.shape)
     feature_num = test_x.shape[1]
     trainer = model.LogisticRegression(
             feature_num,
@@ -31,11 +27,9 @@ def test(train_x_filename,
             f.write('id_%d,%d\n' % (i, int(pred)))
 
 if __name__ == '__main__':
-    args = args.get_args()
-    output_filename = 'ans.csv'
-    model_filename = 'models/try_e20.npy'
+    args = args.get_args(train=False)
     test(args.train_x_filename,
             args.train_y_filename,
             args.test_x_filename, 
-            output_filename, 
-            model_filename)
+            args.output, 
+            args.model_filename)
