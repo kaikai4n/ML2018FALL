@@ -20,11 +20,10 @@ class LogisticRegression():
     def forward(self, x):
         output = x.dot(self._weights)
         output = self._sigmoid(output)
-        return output
+        return output.reshape(-1, 1)
 
     def backward(self, x, y, pred):
-        grad = -np.sum(y-pred) * x
-        grad = np.sum(grad, 0)
+        grad = -np.sum(np.multiply(y-pred, x), axis=0)
         eta = self._optimizer.get_eta(grad)
         self._weights -= eta * grad
 
