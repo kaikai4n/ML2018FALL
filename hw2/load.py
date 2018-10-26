@@ -16,6 +16,8 @@ class DataLoader():
         all_x = self.to_numpy(all_x)
         all_x = self.data_processor.augment_features(all_x)
         train_x, test_x = all_x[:20000], all_x[20000:]
+        random_indexes = np.random.permutation(20000)
+        train_x, train_y = train_x[random_indexes], train_y[random_indexes]
         return train_x, train_y, test_x
 
     def read_training_data(self, train_x_filename, train_y_filename, test_filename):
