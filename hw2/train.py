@@ -18,12 +18,21 @@ def train(
         optim_name,
         validation):
     # Make sure the save pathes are valid
+    # check model save path
     if os.path.isdir('models') == False:
         os.mkdir('models')
     save_model_prefix = os.path.join('models', prefix)
     if os.path.isdir(save_model_prefix) == False:
         os.mkdir(save_model_prefix)
-    
+    # check log save path
+    if os.path.isdir('logs') == False:
+        os.mkdir('logs')
+    log_f = open(os.path.join('logs', prefix + '.log'), 'w')
+    if validation:
+        log_f.write('epoch,loss,accuracy,validation\n')
+    else:
+        log_f.write('epoch,loss,accuracy\n')
+
     feature_num = train_x.shape[1]
     if validation:
         data_processor = data.DataProcessor()
@@ -59,14 +68,20 @@ def train(
             valid_accuracy = trainer.count_accuracy(valid_pred, valid_y)
             message = 'epoch:%3d, loss:%.3f, accuracy:%.3f, validation:%.3f'\
                     % (epoch, total_loss, accuracy, valid_accuracy)
+            log_f.write('%d,%.3f,%.3f,%.3f\n'\
+                    % (epoch, total_loss, accuracy, valid_accuracy))
         else:
             message = 'epoch:%3d, loss:%.3f, accuracy:%.3f' % \
                     (epoch, total_loss, accuracy)
+            log_f.write('%d,%.3f,%.3f\n'\
+                    % (epoch, total_loss, accuracy))
         print(message)
         if (epoch + 1) % save_intervals == 0:
             save_model_path = os.path.join(
                     save_model_prefix, 'model_e%d.npy' % (epoch+1))
             trainer.save_model(save_model_path)
+
+    log_f.close()
 
 if __name__ == '__main__':
     args = args.get_args()
