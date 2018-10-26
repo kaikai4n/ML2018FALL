@@ -1,4 +1,5 @@
 import argparse
+import model
 
 def get_args(train=True):
     parser = argparse.ArgumentParser()
@@ -11,11 +12,9 @@ def get_args(train=True):
     parser.add_argument('--test_x_filename',
             default='data/test_x.csv',
             help='The csv file to test.')
-    parser.add_argument('--attributes_filename',
-            default='models/attributes_PM2.5_PM10.npy',
-            help='The filtered boolean numpy file,\
-                    specified which attributes are used \
-                    to train.')
+    parser.add_argument('--model',
+            default='LogisticRegression',
+            help='The model user would like to use.')
     if train:
         parser.add_argument('--validation',
                 action='store_true',
@@ -64,4 +63,10 @@ def get_args(train=True):
                 required=True,
                 help='When inferencing, the designated model.')
     args = parser.parse_args()
+    try:
+        model_object = getattr(model, args.model)
+    except AttributeError:
+        print('Model not found.')
+        exit()
+
     return args
