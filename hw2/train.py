@@ -6,6 +6,55 @@ import batch
 import optimizer
 import numpy as np
 import os
+    
+def train_gaussian_naive_bayes(
+            train_x, 
+            train_y,
+            prefix,
+            validation):
+    # Make sure the save pathes are valid
+    # check model save path
+    if os.path.isdir('models') == False:
+        os.mkdir('models')
+    save_model_prefix = os.path.join('models', prefix)
+    if os.path.isdir(save_model_prefix) == False:
+        os.mkdir(save_model_prefix)
+    # check log save path
+    if os.path.isdir('logs') == False:
+        os.mkdir('logs')
+    log_f = open(os.path.join('logs', prefix + '.log'), 'w')
+    if validation:
+        log_f.write('accuracy,validation\n')
+    else:
+        log_f.write('accuracy\n')
+
+    feature_num = train_x.shape[1]
+    if validation:
+        data_processor = data.DataProcessor()
+        train_x, train_y, valid_x, valid_y = \
+                data_processor.cut_validation(train_x, train_y)
+    total_data = train_x.shape[0]
+    trainer = model.GaussianNaiveBayes()
+    trainer.fit(train_x, train_y, feature_num)
+    pred_y = trainer.predict(train_x)
+    accuracy = trainer.count_accuracy(pred_y, train_y)
+    if validation:
+        valid_pred = trainer.predict(valid_x)
+        valid_accuracy = trainer.count_accuracy(valid_pred, valid_y)
+        message = 'accuracy:%.3f, validation:%.3f'\
+                % (accuracy, valid_accuracy)
+        log_f.write('%.3f,%.3f\n'\
+                % (accuracy, valid_accuracy))
+    else:
+        message = 'accuracy:%.3f' % (accuracy)
+        log_f.write('%.3f\n'% (accuracy))
+    print(message)
+    save_model_path = os.path.join(
+            save_model_prefix, 'model.npy')
+    trainer.save_model(save_model_path)
+
+    log_f.close()
+
 
 def train(
         train_x, 
@@ -89,13 +138,20 @@ if __name__ == '__main__':
     data_loader = load.DataLoader()
     train_x, train_y = data_loader.read_training_data(
             args.train_x_filename, args.train_y_filename, args.test_x_filename)
-    train(
-            train_x, 
-            train_y,
-            args.batch_size,
-            args.epoches,
-            args.learning_rate,
-            args.save_intervals,
-            args.prefix,
-            args.optimizer,
-            args.validation)
+    if args.model == 'GaussianNaiveBayes':
+        train_gaussian_naive_bayes(
+                train_x, 
+                train_y,
+                args.prefix,
+                args.validation)
+    else:
+        train(
+                train_x, 
+                train_y,
+                args.batch_size,
+                args.epoches,
+                args.learning_rate,
+                args.save_intervals,
+                args.prefix,
+                args.optimizer,
+                args.validation)
