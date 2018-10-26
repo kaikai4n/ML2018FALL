@@ -23,9 +23,12 @@ class LogisticRegression():
         return output.reshape(-1, 1)
 
     def backward(self, x, y, pred):
-        grad = -np.sum(np.multiply(y-pred, x), axis=0)
-        eta = self._optimizer.get_eta(grad)
-        self._weights -= eta * grad
+        weight_y = y
+        times = 1
+        weight_y = weight_y * (times-1) + 1
+        grad = -np.sum(np.multiply(np.multiply(y-pred, weight_y), x), axis=0)
+        update_grad = self._optimizer.get_update_grad(grad)
+        self._weights -= update_grad
 
     def count_loss(self, x, y):
         x = x.squeeze()
