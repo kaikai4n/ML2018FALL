@@ -27,7 +27,7 @@ def get_args(train=True):
                 type=float,
                 default=0.005)
         parser.add_argument('--save_intervals',
-                default=20,
+                default=100,
                 type=int,
                 help='The epoch intervals to save models')
         parser.add_argument('--prefix',
