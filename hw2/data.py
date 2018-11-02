@@ -33,8 +33,8 @@ class DataProcessor():
 
     def augment_features(self, train_x):
         train_x = self._add_bias(train_x)
-        #train_x = self._take_log(train_x)
-        #train_x = self._augment(train_x)
+        train_x = self._take_log(train_x)
+        train_x = self._augment(train_x)
         train_x = self._normalize(train_x)
         return train_x
 
