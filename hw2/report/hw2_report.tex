@@ -76,7 +76,7 @@ please show that such integral over $(−\infty, \infty)$ is equal to $1$.
 index variable. I.e. the letter of the index indicates which layer the symbol corresponds to.
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\textwidth]{./q6.png}
+    \includegraphics[width=0.7\textwidth]{./q6.png}
 \end{figure}
 For convenience, we may consider only one training example and ignore the bias term.Forward propagation of the input $z_i$ is done as follows. Where $g(z)$ is some differentiable function (e.g. the logistic function).
 
@@ -90,18 +90,23 @@ For convenience, we may consider only one training example and ignore the bias t
 \end{align*}
 Derive the general expressions for the following partial derivatives of an error function $E$, also sime differentiable function, in the feed-forward neural network depicted. In other words, you should derive these partial derivatives into ”computable derivative”
 \begin{enumerate}
-    \item \begin{align*}
-        \pdv{E}{z_k} &= \pdv{E}{y_k}\pdv{y_k}{z_k}\\
-        &= \pdv{E}{y_k}\pdv{g(z_k)}{z_k}\\
-        &= \pdv{E}{y_k}g'(z_k)\\
+    \item 首先，我將$z_k$那層的三個神經元分別標上$z_{k1}$、$z_{k2}$和$z_{k3}$，而$y_k$也是。
+    \begin{align*}
+        \pdv{E}{z_{ka}} &= \pdv{E}{y_{ka}}\pdv{y_{ka}}{z_{ka}}\\
+        &= \pdv{E}{y_{ka}}\pdv{g(z_{ka})}{z_{ka}}\\
+        &= \pdv{E}{y_{ka}}g'(z_{ka})\\
     \end{align*}
-    \item \begin{align*}
-        \pdv{E}{z_j} &= \left(\sum\limits_{k=1}^3\pdv{E}{y_k}\pdv{y_k}{z_k}\pdv{z_k}{y_j}\right)\pdv{y_j}{z_j}\\
-        \pdv{E}{z_j} &= \left(\sum\limits_{k=1}^3\pdv{E}{y_k}g'(z_k)w_{jk}\right)g'(z_j)\\
+    , for $a \in \{1,2,3\}$
+    \item 將$z_j$那層的三個神經元分別標上$z_{j1}$、$z_{j2}$和$z_{j3}$，而從$z_{ja}$對應到$z_{kb}$的參數是$w_{j_ak_b}$，當中的$a, b \in \{1,2,3\}$。
+    \begin{align*}
+        \pdv{E}{z_{ja}} &= \left(\sum\limits_{b=1}^3\pdv{E}{y_{kb}}\pdv{y_{kb}}{z_{kb}}\pdv{z_{kb}}{y_{ja}}\right)\pdv{y_{ja}}{z_{ja}}\\
+        &= \left(\sum\limits_{b=1}^3\pdv{E}{y_{kb}}g'(z_{kb})w_{j_ak_b}\right)g'(z_{ja})\\
     \end{align*}
-    \item \begin{align*}
-        \pdv{E}{w_{ij}} &= \left(\sum\limits_{k=1}^3\pdv{E}{y_k}\pdv{y_k}{z_k}\pdv{z_k}{y_j}\right)\pdv{y_j}{z_j}\pdv{z_j}{w_{ij}}\\
-        \pdv{E}{z_j} &= \left(\sum\limits_{k=1}^3\pdv{E}{y_k}g'(z_k)w_{jk}\right)g'(z_j)y_i\\
+    , for $a \in \{1,2,3\}$
+    \item 從$z_{ia}$對應到$z_{jb}$的參數是$w_{i_aj_b}$，從$z_{jb}$對應到$z_{kc}$的參數是$w_{j_bk_c}$當中的$a, b, c \in \{1,2,3\}$。
+    \begin{align*}
+        \pdv{E}{w_{i_aj_b}} &= \left(\sum\limits_{c=1}^3\pdv{E}{y_{kc}}\pdv{y_{kc}}{z_{kc}}\pdv{z_{kc}}{y_{jb}}\right)\pdv{y_{jb}}{z_{jb}}\pdv{z_{jb}}{w_{i_aj_b}}\\
+        &= \left(\sum\limits_{c=1}^3\pdv{E}{y_{kc}}g'(z_{kc})w_{j_bk_c}\right)g'(z_{jb})y_{ia}\\
     \end{align*}
 \end{enumerate}
 \end{enumerate}
