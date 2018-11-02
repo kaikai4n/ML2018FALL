@@ -1,0 +1,109 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage{xeCJK, float, graphicx, indentfirst, amsmath, amssymb, physics, multirow, caption, hyperref}
+\usepackage[left=1in, right=1in]{geometry}
+
+\setCJKmainfont{標楷體}
+
+\author{資工四 B04902131 黃郁凱}
+\title{\vspace{-2cm} Homework 2 Report - \\Credit Card Default Payment Prediction}
+
+\begin{document}
+
+\maketitle
+
+\begin{enumerate}
+\item 請簡單描述你實作之 logistic regression 以及 generative model 於此task的表現,並試著討論可能原因。\par
+從表格\ref{tab:lr_gm}可以看到，在validation結果上，Logistic Regression有比較少的overfit的現象；在testing上可以觀察到Generative Model有稍微好一些，但基本上兩者的performance差不多。Generative Model目的想找出資料分布，根據機率模型的假設，找出最符合$P(X,Y)$的$\mu$跟$\Sigma$；而Discriminative Model則是想要直接找出$P(Y\vert X)$。上課時老師有提到，大多的情況下Discriminative Model的成效會比較好，也就是Logistic Regression的表現照理會比較好，但是在training data較少的情況下，Generative Model的performance會相對好一些，因為他多了一些機率假設，因此在資料少的情況下，如果資料分布符合那樣的假設，就會發揮較好的作用。在這次的競賽題中，兩萬筆的資料尚無法看出兩個model的明顯好壞，如果今天有二十萬筆training data，那麼我相信Logistic Regression會明顯勝過Generative Model。
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|c|c|}\hline
+        \multicolumn{4}{|c|}{Logistic Regression}&\multicolumn{4}{|c|}{Generative Model}\\\hline
+        train&validation&public&private&train&validation&public&private\\\hline
+        0.821&0.821&0.819&0.8216&0.823&0.815&0.821&0.8224\\\hline
+    \end{tabular}
+    \caption{不同模型的正確率比較。}
+    \label{tab:lr_gm}
+\end{table}
+\item 請試著將 input feature 中的 gender, education, martial status 等改為one-hot encoding 進行 training process,比較其模型準確率及其可能影響原因。\par
+表格\ref{tab:one_hot}中可以明顯看出，有做one-hot encoding的效果會比較好，不論在training還是testing的結果都是。在資料當中，那些轉換為one-hot的維度，本身數字的值並沒有代表性，只能區隔不同類別的屬性，例如男生是1女生是0。因此，將這些維度轉換為one-hot encoding是合理的，也讓模型比較好認出這些屬性的差異。
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{|l|c|c|c|c|}\hline
+        \multirow{2}{*}{model}&\multicolumn{2}{|c|}{Training}&\multicolumn{2}{|c|}{Testing}\\\cline{2-5}
+        &train&validation&public&private\\\hline
+        有one-hot&0.820&0.819&0.819&0.822\\\hline
+        無one-hot&0.811&0.814&0.807&0.807\\\hline
+    \end{tabular}
+    \caption{不同模型的正確率比較。}
+    \label{tab:one_hot}
+\end{table}
+\item 請試著討論哪些 input features 的影響較大(實驗方法沒有特別限制,但請簡單闡述實驗方法)。\par
+從Logistic Regression的實驗結果可以發現，當我先用全部的特徵下去訓練，將訓練好的參數倒出來看，可以發現其中[PAY\_0-6]這些特徵所佔有的比重較大，而其他的特徵大多接近$0$。為了確保這些特徵是有用的，只用這幾種特徵下去訓練，所得到的正確率不會有太大變化，都約$0.82$，更顯示這些特徵的重要性。
+\item 請實作特徵標準化 (feature normalization),並討論其對於模型準確率的影響與可能原因。\par
+當我沒有加特徵標準化時，訓練過程會很不穩定，並且正確率會一直卡在$60\%$左右無法上升，然而加上以後，可以使訓練變穩定且正確值可以收斂到$82\%$。當我將同個維度的多次方也加進去一起訓練時，這樣的情況會加劇，原因出在沒有標準化的資料如果有巨大變化的值，就會影響線性模型$\sum w_ix_i$的結果，而加上標準化會使得這樣的偏差影響減小，較不會受到bias的影響。
+\item The Normal (or Gaussian) Distribution is a very common continuous
+probability distribution. Given the PDF of such distribution
+$$f(x) = \frac{1}{\sqrt{2\pi}\sigma}e^{-\frac{(x-\mu)^2}{2\sigma^2}}, -\infty < x < \infty$$
+please show that such integral over $(−\infty, \infty)$ is equal to $1$.
+\begin{itemize}
+    \item First prove that $$I = \int_{-\infty}^{\infty}e^{-x^{2}}\,dx=\sqrt{\pi}$$
+    \begin{align*}
+        I^{2}&=4\int _{0}^{\infty }\int _{0}^{\infty }e^{-(x^{2}+y^{2})}dy\,dx\\
+        &=4\int _{0}^{\infty }\left(\int _{0}^{\infty }e^{-(x^{2}+y^{2})}\,dy\right)\,dx\\
+        &=4\int _{0}^{\infty }\left(\int _{0}^{\infty }e^{-x^{2}(1+s^{2})}x\,ds\right)\,dx\\
+        &=4\int _{0}^{\infty }\left(\int _{0}^{\infty }e^{-x^{2}(1+s^{2})}x\,dx\right)\,ds\\
+        &=4\int _{0}^{\infty }\left[{\frac {1}{-2(1+s^{2})}}e^{-x^{2}(1+s^{2})}\right]_{x=0}^{x=\infty }\,ds\\
+        &=4\left({\frac {1}{2}}\int _{0}^{\infty }{\frac {ds}{1+s^{2}}}\right)\\
+        &=2{\Big [}\arctan s{\Big ]}_{0}^{\infty }\\
+        &=\pi
+    \end{align*}
+    Thus, $I = \sqrt{\pi}$ (Prove from wiki:\url{https://en.wikipedia.org/wiki/Gaussian\_integral})\\
+    \item Then prove the required integral is $1$.
+    \begin{align*}
+        \int_{-\infty}^{\infty} f(x)\,dx &= \int_{-\infty}^{\infty} \frac{1}{\sqrt{2\pi}\sigma}e^{-\frac{(x-\mu)^2}{2\sigma^2}}\,dx\\
+        &= \frac{1}{\sqrt{2\pi}\sigma}\int_{-\infty}^{\infty}e^{-\frac{(x-\mu)^2}{2\sigma^2}}\,dx\\
+        &= \frac{1}{\sqrt{2\pi}\sigma}\int_{-\infty}^{\infty}e^{-(\frac{x-\mu}{\sqrt{2}\sigma})^2}\,dx\\
+        &\text{let } z = \frac{x-\mu}{\sqrt{2}\sigma}\\
+        &= \frac{1}{\sqrt{2\pi}\sigma}\int_{-\infty}^{\infty}e^{-z^2}\sqrt{2}\sigma\,dz\\
+        &= \frac{1}{\sqrt{\pi}}\int_{-\infty}^{\infty}e^{-z^2}\,dz\\
+        &= \frac{1}{\sqrt{\pi}}I\\
+        &= \frac{1}{\sqrt{\pi}}\sqrt{\pi}\\
+        &= 1\\
+    \end{align*}
+\end{itemize}
+\item Given a three layers neural network, each layer labeled by its respective
+index variable. I.e. the letter of the index indicates which layer the symbol corresponds to.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{./q6.png}
+\end{figure}
+For convenience, we may consider only one training example and ignore the bias term.Forward propagation of the input $z_i$ is done as follows. Where $g(z)$ is some differentiable function (e.g. the logistic function).
+
+
+\begin{align*}
+    &y_i = g(z_i)\\
+    &z_j = \sum\limits_i w_{ij}y_i\\
+    &y_j = g(z_j)\\
+    &z_k = \sum\limits_j w_{jk}y_j\\
+    &y_k = g(z_k)\\
+\end{align*}
+Derive the general expressions for the following partial derivatives of an error function $E$, also sime differentiable function, in the feed-forward neural network depicted. In other words, you should derive these partial derivatives into ”computable derivative”
+\begin{enumerate}
+    \item \begin{align*}
+        \pdv{E}{z_k} &= \pdv{E}{y_k}\pdv{y_k}{z_k}\\
+        &= \pdv{E}{y_k}\pdv{g(z_k)}{z_k}\\
+        &= \pdv{E}{y_k}g'(z_k)\\
+    \end{align*}
+    \item \begin{align*}
+        \pdv{E}{z_j} &= \left(\sum\limits_{k=1}^3\pdv{E}{y_k}\pdv{y_k}{z_k}\pdv{z_k}{y_j}\right)\pdv{y_j}{z_j}\\
+        \pdv{E}{z_j} &= \left(\sum\limits_{k=1}^3\pdv{E}{y_k}g'(z_k)w_{jk}\right)g'(z_j)\\
+    \end{align*}
+    \item \begin{align*}
+        \pdv{E}{w_{ij}} &= \left(\sum\limits_{k=1}^3\pdv{E}{y_k}\pdv{y_k}{z_k}\pdv{z_k}{y_j}\right)\pdv{y_j}{z_j}\pdv{z_j}{w_{ij}}\\
+        \pdv{E}{z_j} &= \left(\sum\limits_{k=1}^3\pdv{E}{y_k}g'(z_k)w_{jk}\right)g'(z_j)y_i\\
+    \end{align*}
+\end{enumerate}
+\end{enumerate}
+
+\end{document}
