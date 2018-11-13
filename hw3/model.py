@@ -1,7 +1,21 @@
 import torch
 
+class CNN(torch.nn.Module):
+    def __init__(self):
+        super(CNN, self).__init__()
 
-class SimpleCNN(torch.nn.Module):
+    def save(self, filename):
+        state_dict = {name:value.cpu() for name, value \
+                in self.state_dict().items()}
+        status = {'state_dict':state_dict,}
+        with open(filename, 'wb') as f_model:
+            torch.save(status, f_model)
+    
+    def load(self, filename):
+        status = torch.load(filename)
+        self.load_state_dict(status['state_dict'])
+
+class SimpleCNN(CNN):
     def __init__(self):
         super(SimpleCNN, self).__init__()
         self._init_network()
@@ -41,7 +55,7 @@ class SimpleCNN(torch.nn.Module):
         prob = self._softmax(y)
         return prob
 
-class Mobilenet(torch.nn.Module):
+class Mobilenet(CNN):
     def __init__(self):
         super(Mobilenet, self).__init__()
         self._init_network()
