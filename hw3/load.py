@@ -19,8 +19,8 @@ class DataLoader():
         x_id = df_training['id'].values
         x = df_training['feature'].tolist()
         x = [[int(value) for value in ele.split()] for ele in x]
-        x = np.array(x)
-        return x[:,1:]
+        x = np.array(x, dtype=np.float32).reshape(-1, 1, 48, 48)
+        return x
 
 
 if __name__ == '__main__':
