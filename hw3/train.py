@@ -28,7 +28,7 @@ def train(
     if os.path.isdir('logs') == False:
         os.mkdir('logs')
     log_save_path = os.path.join('logs', prefix + '.log')
-    f_log = open(log_save_path, 'w')
+    f_log = open(log_save_path, 'w+')
     if validation:
         f_log.write('epoch,loss,validation\n')
     else:
