@@ -16,6 +16,10 @@ def get_args(train=True):
             default=True,
             action='store_false',
             help='Use cuda or not.')
+    parser.add_argument('--seed',
+            default=7122,
+            type=int,
+            help='Random seed for numpy.')
     if train:
         parser.add_argument('--validation',
                 action='store_true',
@@ -23,12 +27,12 @@ def get_args(train=True):
                 help='To split validation or not.')
         parser.add_argument('-e', '--epoches',
                 type=int,
-                default=200)
+                default=1000)
         parser.add_argument('-lr', '--learning_rate',
                 type=float,
                 default=0.001)
         parser.add_argument('--save_intervals',
-                default=100,
+                default=10,
                 type=int,
                 help='The epoch intervals to save models')
         parser.add_argument('--prefix',
@@ -39,10 +43,6 @@ def get_args(train=True):
                 type=str,
                 help='The initialization parameters \
                         from a given model name.')
-        parser.add_argument('--seed',
-                default=7122,
-                type=int,
-                help='Random seed for numpy.')
         parser.add_argument('-b', '--batch_size',
                 default=128,
                 type=int,
