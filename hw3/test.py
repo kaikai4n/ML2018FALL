@@ -15,12 +15,17 @@ def test(test_x, output_filename, model_name, model_filename, use_cuda):
     my_model.eval()
     if use_cuda:
         my_model = my_model.cuda()
-    pred_prob = my_model.forward(test_x)
-    pred = torch.argmax(pred_prob, dim=1)
     with open(output_filename, 'w') as f:
         f.write('id,label\n')
-        for i, pred_value in enumerate(pred):
-            f.write('%d,%d\n' % (i, pred_value))
+        with torch.no_grad():
+            test_len = test_x.shape[0]
+            batch_num = int(test_len / 1000) + 1
+            for i in range(batch_num):
+                pred_prob = my_model.forward(\
+                        test_x[1000*i:min(1000*(i+1), test_len)])
+                pred = torch.argmax(pred_prob, dim=1)
+                for j, pred_value in enumerate(pred):
+                    f.write('%d,%d\n' % (i*1000+j, pred_value))
 
 if __name__ == '__main__':
     args = get_args(train=False)
@@ -32,7 +37,6 @@ if __name__ == '__main__':
     test_x = torch.tensor(test_x)
     if args.use_cuda:
         test_x = test_x.cuda()
-    print(test_x.shape)
     test_x /= 255
     #data_processor = data.DataProcessor(train_x, train_y, train_x.shape[0])
     #data_processor.normalize()
