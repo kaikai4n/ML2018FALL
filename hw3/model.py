@@ -91,11 +91,64 @@ class Mobilenet(CNN):
                     _conv_dw(256, 256, 1),
                     _conv_dw(256, 512, 2),
                     _conv_dw(512, 512, 1),
+                    _conv_dw(512, 512, 1),
+                    _conv_dw(512, 512, 1),
+                    _conv_dw(512, 512, 1),
+                    _conv_dw(512, 512, 1),
                     torch.nn.AvgPool2d(3),
                 )
         self._model_linear = torch.nn.Sequential(
-                    torch.nn.Linear(512, 64),
-                    torch.nn.Linear(64, 7),
+                    torch.nn.Linear(512, 128),
+                    torch.nn.Linear(128, 32),
+                    torch.nn.Linear(32, 7),
+                )
+        self._softmax = torch.nn.Softmax(dim=1)
+
+    def forward(self, x):
+        batch_size = x.shape[0]
+        conv = self._model_conv(x)
+        linear_in = conv.view(batch_size, -1)
+        linear_out = self._model_linear(linear_in)
+        output = self._softmax(linear_out)
+        return output
+
+class VGG(CNN):
+    def __init__(self):
+        super(VGG, self).__init__()
+        self._init_network()
+
+    def _init_network(self):
+        def _conv(in_channel, out_channel):
+            conv = torch.nn.Sequential(
+                    torch.nn.Conv2d(in_channel, out_channel, 3, 1, 1),
+                    torch.nn.ReLU(),
+                )
+            return conv
+        def _max_pool():
+            return torch.nn.MaxPool2d(2)
+        self._model_conv = torch.nn.Sequential(
+                    _conv(1, 64),
+                    _conv(64, 64),
+                    _max_pool(),
+                    _conv(64, 128),
+                    _conv(128, 128),
+                    _max_pool(),
+                    _conv(128, 256),
+                    _conv(256, 256),
+                    _conv(256, 256),
+                    _max_pool(),
+                    _conv(256, 512),
+                    _conv(512, 512),
+                    _conv(512, 512),
+                    _max_pool(),
+                    _conv(512, 512),
+                    _conv(512, 512),
+                    _conv(512, 512),
+                    torch.nn.AvgPool2d(3),
+                )
+        self._model_linear = torch.nn.Sequential(
+                    torch.nn.Linear(512, 128),
+                    torch.nn.Linear(128, 7),
                 )
         self._softmax = torch.nn.Softmax(dim=1)
 
