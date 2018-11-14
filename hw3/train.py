@@ -28,11 +28,11 @@ def train(
     if os.path.isdir('logs') == False:
         os.mkdir('logs')
     log_save_path = os.path.join('logs', prefix + '.log')
-    f_log = open(log_save_path, 'w+')
-    if validation:
-        f_log.write('epoch,loss,validation\n')
-    else:
-        f_log.write('epoch,loss\n')
+    with open(log_save_path, 'w') as f_log:
+        if validation:
+            f_log.write('epoch,loss,validation\n')
+        else:
+            f_log.write('epoch,loss\n')
     # model path
     if os.path.isdir('models') == False:
         os.mkdir('models')
@@ -68,7 +68,7 @@ def train(
     loss_func = torch.nn.CrossEntropyLoss()
     print('Start Training ...')
     for epoch in range(epoch_num):
-        total_loss, total_steps = 0, 0
+        total_loss, total_steps, total_accu = 0.0, 0.0, 0.0
         for step, (x, y) in enumerate(train_loader):
             if use_cuda:
                 x, y = x.cuda(), y.cuda()
@@ -78,21 +78,28 @@ def train(
             loss.backward()
             optimizer.step()
             total_loss += loss
+            total_accu += float(torch.sum(torch.argmax(pred, dim=1) == y))
             total_steps += 1
 
         total_loss /= total_steps
+        total_accu /= train_x.shape[0]
         if validation:
             with torch.no_grad():
-                valid_loss = loss_func(my_model.forward(valid_x), valid_y)
-            progress_msg = 'epoch:%3d, loss:%.3f, validation:%.3f' % \
-                    (epoch, total_loss, valid_loss)
-            log_msg = '%d,%.5f,%.5f\n' % \
-                    (epoch, total_loss, valid_loss)
+                pred_valid = my_model.forward(valid_x)
+                valid_loss = loss_func(pred_valid, valid_y)
+                valid_accu = torch.sum(torch.argmax(pred_valid, dim=1) == valid_y)
+                valid_accu = float(valid_accu) / valid_x.shape[0]
+            progress_msg = 'epoch:%3d, loss:%.3f, accuracy:%.3f, validation:%.3f, validation accuracy:%.3f'\
+                    % (epoch, total_loss, total_accu, valid_loss, valid_accu)
+            log_msg = '%d,%.4f,%.3f,%.4f,%.3f\n' % \
+                    (epoch, total_loss, total_accu, valid_loss, valid_accu)
         else:
-            progress_msg = 'epoch:%3d, loss:%.3f' % (epoch, total_loss)
-            log_msg = '%d,%.5f\n' % (epoch, total_loss)
+            progress_msg = 'epoch:%3d, loss:%.3f, accuracy:%3f'\
+                    % (epoch, total_loss, total_accu)
+            log_msg = '%d,%.4f,%.3f\n' % (epoch, total_loss, total_accu)
         print(progress_msg)
-        f_log.write(log_msg)
+        with open(log_save_path, 'a') as f_log:
+            f_log.write(log_msg)
         if (epoch + 1) % save_intervals == 0:
             model_save_path = os.path.join(model_path, 'models_e%d.pt' % (epoch+1))
             my_model.save(model_save_path)
