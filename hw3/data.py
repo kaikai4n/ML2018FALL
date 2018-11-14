@@ -1,18 +1,39 @@
 from torch.utils.data import Dataset
 import numpy as np
+from PIL import Image
+import torchvision.transforms as transforms
 
 class FaceDataset(Dataset):
-    def __init__(self, x, y, data_length):
+    def __init__(self, x, y, data_length, transform=None):
         super(FaceDataset, self).__init__()
         self.x = x
         self.y = y
         self.data_length = data_length
+        if transform is None:
+            self.transform = transforms.Compose([
+                    transforms.RandomAffine(
+                            degrees=(-45, 45),
+                            translate=(0.1, 0.1),
+                            shear=(-15, 15),
+                        ),
+                    transforms.RandomResizedCrop(48),
+                    transforms.RandomHorizontalFlip(),
+                    transforms.ToTensor(),
+                ])
+        else:
+            self.transform = transform
 
     def __len__(self):
         return self.data_length
 
     def __getitem__(self, i):
-        return self.x[i], self.y[i]
+        if self.transform is not None:
+            img = Image.fromarray(self.x[i].squeeze())
+            img = self.transform(img)
+            ret_x = img.reshape(-1, 48, 48)
+            return ret_x, self.y[i]
+        else:
+            return self.x[i], self.y[i]
 
 class DataProcessor():
     def __init__(self, x, y, data_length):
