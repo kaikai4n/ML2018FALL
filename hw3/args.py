@@ -27,12 +27,12 @@ def get_args(train=True):
                 help='To split validation or not.')
         parser.add_argument('-e', '--epoches',
                 type=int,
-                default=1000)
+                default=2000)
         parser.add_argument('-lr', '--learning_rate',
                 type=float,
                 default=0.001)
         parser.add_argument('--save_intervals',
-                default=10,
+                default=100,
                 type=int,
                 help='The epoch intervals to save models')
         parser.add_argument('--prefix',
