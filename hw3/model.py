@@ -121,34 +121,34 @@ class VGG(CNN):
         def _conv(in_channel, out_channel):
             conv = torch.nn.Sequential(
                     torch.nn.Conv2d(in_channel, out_channel, 3, 1, 1),
-                    torch.nn.ReLU(),
+                    torch.nn.BatchNorm2d(out_channel),
+                    torch.nn.ReLU(inplace=True),
                 )
             return conv
         def _max_pool():
             return torch.nn.MaxPool2d(2)
         self._model_conv = torch.nn.Sequential(
-                    _conv(1, 64),
+                    _conv(1, 16),
+                    _conv(16, 16),
+                    _max_pool(),
+                    _conv(16, 32),
+                    _conv(32, 32),
+                    _max_pool(),
+                    _conv(32, 64),
+                    _conv(64, 64),
                     _conv(64, 64),
                     _max_pool(),
                     _conv(64, 128),
                     _conv(128, 128),
+                    _conv(128, 128),
                     _max_pool(),
-                    _conv(128, 256),
-                    _conv(256, 256),
-                    _conv(256, 256),
-                    _max_pool(),
-                    _conv(256, 512),
-                    _conv(512, 512),
-                    _conv(512, 512),
-                    _max_pool(),
-                    _conv(512, 512),
-                    _conv(512, 512),
-                    _conv(512, 512),
-                    torch.nn.AvgPool2d(3),
                 )
         self._model_linear = torch.nn.Sequential(
-                    torch.nn.Linear(512, 128),
-                    torch.nn.Linear(128, 7),
+                    torch.nn.Linear(128*3*3, 128),
+                    torch.nn.ReLU(inplace=True),
+                    torch.nn.Linear(128, 128),
+                    torch.nn.ReLU(inplace=True),
+                    torch.nn.Linear(32, 7),
                 )
         self._softmax = torch.nn.Softmax(dim=1)
 
