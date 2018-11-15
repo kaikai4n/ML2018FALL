@@ -77,8 +77,8 @@ def train(
             loss = loss_func(pred, y)
             loss.backward()
             optimizer.step()
-            total_loss += loss
-            total_accu += float(torch.sum(torch.argmax(pred, dim=1) == y))
+            total_loss += float(loss.cpu())
+            total_accu += float(torch.sum(torch.argmax(pred, dim=1) == y).cpu())
             total_steps += 1
 
         total_loss /= total_steps
