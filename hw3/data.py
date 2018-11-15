@@ -9,15 +9,19 @@ class FaceDataset(Dataset):
         self.x = x
         self.y = y
         self.data_length = data_length
+        self.counter = [0 for _ in range(data_length)]
+        self.previous_x = [[] for _ in range(data_length)]
         if transform is None:
             self.transform = transforms.Compose([
-                    transforms.RandomAffine(
-                            degrees=(-45, 45),
-                            translate=(0.1, 0.1),
-                            shear=(-15, 15),
-                        ),
-                    transforms.RandomResizedCrop(48),
+                    #transforms.RandomResizedCrop(48),
+                    transforms.ColorJitter(),
                     transforms.RandomHorizontalFlip(),
+                    transforms.RandomAffine(
+                            degrees=(-30, 30),
+                            translate=(0.1, 0.1),
+                            scale=(0.8, 1.2),
+                            shear=(-10, 10),
+                        ),
                     transforms.ToTensor(),
                 ])
         else:
@@ -28,9 +32,14 @@ class FaceDataset(Dataset):
 
     def __getitem__(self, i):
         if self.transform is not None:
-            img = Image.fromarray(self.x[i].squeeze())
-            img = self.transform(img)
-            ret_x = img.reshape(-1, 48, 48)
+            if self.counter[i] % 10 == 0:
+                self.counter[i] += 1
+                img = Image.fromarray(self.x[i].squeeze())
+                img = self.transform(img)
+                ret_x = img.reshape(1, 48, 48)
+                self.previous_x[i] = ret_x
+            else:
+                ret_x = self.previous_x[i]
             return ret_x, self.y[i]
         else:
             return self.x[i], self.y[i]
