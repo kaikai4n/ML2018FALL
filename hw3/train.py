@@ -85,10 +85,12 @@ def train(
         total_accu /= train_x.shape[0]
         if validation:
             with torch.no_grad():
+                my_model.eval()
                 pred_valid = my_model.forward(valid_x)
                 valid_loss = loss_func(pred_valid, valid_y)
                 valid_accu = torch.sum(torch.argmax(pred_valid, dim=1) == valid_y)
                 valid_accu = float(valid_accu) / valid_x.shape[0]
+                my_model.train()
             progress_msg = 'epoch:%3d, loss:%.3f, accuracy:%.3f, validation:%.3f, validation accuracy:%.3f'\
                     % (epoch, total_loss, total_accu, valid_loss, valid_accu)
             log_msg = '%d,%.4f,%.3f,%.4f,%.3f\n' % \
