@@ -9,8 +9,8 @@ class FaceDataset(Dataset):
         self.x = x
         self.y = y
         self.data_length = data_length
-        self.counter = [0 for _ in range(data_length)]
-        self.previous_x = [[] for _ in range(data_length)]
+        #self.counter = [0 for _ in range(data_length)]
+        #self.previous_x = [[] for _ in range(data_length)]
         if transform is None:
             self.transform = transforms.Compose([
                     #transforms.RandomResizedCrop(48),
@@ -32,7 +32,8 @@ class FaceDataset(Dataset):
 
     def __getitem__(self, i):
         if self.transform is not None:
-            if self.counter[i] % 10 == 0:
+            '''
+            if self.counter[i] % 5 == 0:
                 self.counter[i] += 1
                 img = Image.fromarray(self.x[i].squeeze())
                 img = self.transform(img)
@@ -40,6 +41,11 @@ class FaceDataset(Dataset):
                 self.previous_x[i] = ret_x
             else:
                 ret_x = self.previous_x[i]
+            return ret_x, self.y[i]
+            '''
+            img = Image.fromarray(self.x[i].squeeze())
+            img = self.transform(img)
+            ret_x = img.reshape(1, 48, 48)
             return ret_x, self.y[i]
         else:
             return self.x[i], self.y[i]
