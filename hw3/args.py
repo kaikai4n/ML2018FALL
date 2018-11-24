@@ -27,6 +27,10 @@ def get_args(train=True):
             default=7122,
             type=int,
             help='Random seed for numpy.')
+    parser.add_argument('-b', '--batch_size',
+            default=128,
+            type=int,
+            help='The batch size when training.')
     if train:
         parser.add_argument('--validation',
                 action='store_true',
@@ -50,10 +54,6 @@ def get_args(train=True):
                 type=str,
                 help='The initialization parameters \
                         from a given model name.')
-        parser.add_argument('-b', '--batch_size',
-                default=128,
-                type=int,
-                help='The batch size when training.')
         parser.add_argument('--optimizer',
                 default='Adam',
                 help='The optimizer name in optimizer.py.')
