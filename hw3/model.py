@@ -395,3 +395,31 @@ class Kai4(CNN):
                     torch.nn.Linear(512, 7),
                 )
         self._softmax = torch.nn.Softmax(dim=1)
+
+class SimpleDNN(CNN):
+    def __init__(self):
+        super(SimpleDNN, self).__init__()
+        self._init_network()
+
+    def _init_network(self):
+        def _relu():
+            return torch.nn.ReLU(inplace=True)
+        self._linear = torch.nn.Sequential(
+                    torch.nn.Linear(48*48*1, 1536),
+                    _relu(),
+                    torch.nn.Linear(1536, 512),
+                    _relu(),
+                    torch.nn.Linear(512, 128),
+                    _relu(),
+                    torch.nn.Linear(128, 32),
+                    _relu(),
+                    torch.nn.Linear(32, 7),
+                )
+        self._softmax = torch.nn.Softmax(dim=1)
+
+    def forward(self, x):
+        batch_size = x.shape[0]
+        x = x.view(batch_size, -1)
+        y = self._linear(x)
+        prob = self._softmax(y)
+        return prob
