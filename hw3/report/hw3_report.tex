@@ -1,0 +1,130 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage{xeCJK, float, graphicx, indentfirst, amsmath, amssymb, physics, multirow, caption, hyperref}
+\usepackage[left=1in, right=1in]{geometry}
+
+\setCJKmainfont{標楷體}
+
+\author{資工四 B04902131 黃郁凱}
+\title{\vspace{-2cm} Homework 3 Report - \\Image Sentiment Classification}
+
+\begin{document}
+
+\maketitle
+
+\begin{enumerate}
+\item 請說明你實作的 CNN model，其模型架構、訓練過程和準確率為何？\\
+我主要使用三種類別的CNN模型架構，分別是仿Mobilenet、仿VGG和VGG改編。
+使用原本的Mobilenet與VGG的成效不好，validation大約$60\%$，因此都有做不少的變形。
+以下是我仿造的Mobilenet和VGG的模型架構:\\
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|l|l|}\hline
+    model&Mobilenet & VGG\\ \hline
+    \multirow{12}{*}{Convolution Block}&conv\_bn(  1,  16, 1)&conv\_bn(1,16,1)\\
+    &conv\_bn( 16,  32, 1)&conv\_bn(16,32,1)\\
+    &conv\_bn( 32,  32, 2)&max\_pool\\
+    &conv\_dw( 32,  64, 1)&conv\_bn(32,64,1)\\
+    &conv\_dw( 64,  64, 1)&conv\_bn(64,64,1)\\
+    &conv\_dw( 64, 128, 2)&max\_pool\\
+    &conv\_dw(128, 256, 2)&conv\_bn(64,128,1)\\
+    &conv\_dw(256, 512, 2)&conv\_bn(128,128,1)\\ 
+    &                     &max\_pool\\
+    &                     &conv\_bn(128,256,1)\\
+    &                     &conv\_bn(256,256,1)\\
+    &                     &max\_pool\\ \hline
+    \multirow{3}{*}{Linear Block}&linear(512*3*3, 512)&linear(256*3*3,256)\\
+    &linear(512, 7)&linear(256,32)\\
+    &&linear(32, 7)\\ \hline
+\end{tabular}
+\caption{表格中的conv\_bn是一般convolution的基本架構，詳細在figure \ref{fig:conv_bn}，而conv\_dw是depthwise convolution，也就是Mobilenet提出的特殊結構，由兩個convolution組成，在figure \ref{fig:conv_dw}有詳細內容。仿造Mobilenet和VGG16建造的模型，最終可以得到約$66\%$的表現。}
+\end{table}
+
+\begin{figure}[h]
+    \begin{align*}
+        conv\_bn(in,out,stride) &= Sequetial(\\
+        &Conv2d(in, out, 3, stride, 1),\\
+        &BatchNorm2d(out),\\
+        &relu())
+    \end{align*}
+    \caption{The basic batchnorm convolution block.}
+    \label{fig:conv_bn}
+\end{figure}
+
+\begin{figure}[h]
+    \begin{align*}
+        conv\_bn(in,out,stride) &= Sequetial(\\
+        &Conv2d(in, out, 3, stride, 1, groups=in),\\
+        &BatchNorm2d(out),\\
+        &relu(),\\
+        &Conv2d(in, out, 1, 1, 0),\\
+        &BatchNorm2d(out),\\
+        &relu())
+    \end{align*}
+    \caption{The basic depth-wise convolution block.}
+    \label{fig:conv_dw}
+\end{figure}
+Mobilenet和VGG16在Convolutional Block的部分和我調整過後有些微差異，他們在深度上更深，並在前半的filter數量較少，後半較多；我調整後將深度減少，並在前半段filter少的部分多做幾層，後半段大的filter層數減少。經過如此調整，正確率可以從原本的$60\%$進步到$66\%$。\\
+由於Mobilenet和VGG都是用來訓練Imagenet專用的模型架構，Imagenet有一百多萬張相片，分類目標有1000個class；相比我們的task規模較小，兩萬多張相片分類7個class。人臉表情辨識的模型不需要如他們一樣龐大的模型，精簡的就可以達到很好的效果。因此經過前人模型的經驗，我自己研發了一套模型可以達到$68\%$準確率。
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|l|l|}\hline
+    model&Mobilenet & VGG\\ \hline
+    \multirow{12}{*}{Convolution Block}&conv\_bn(  1,  16, 1)&conv\_bn(1,16,1)\\
+    &conv\_bn(16,32,1)\\
+    &max\_pool\\
+    &conv\_bn(32,64,1)\\
+    &conv\_bn(64,64,1)\\
+    &max\_pool\\
+    &conv\_bn(64,128,1)\\
+    &conv\_bn(128,128,1)\\ 
+    &max\_pool\\
+    &conv\_bn(128,256,1)\\
+    &conv\_bn(256,256,1)\\
+    &max\_pool\\ \hline
+    \multirow{3}{*}{Linear Block}&linear(512*3*3, 512)&linear(256*3*3,256)\\
+    &linear(256,32)\\
+    &linear(32, 7)\\ \hline
+\end{tabular}
+\caption{表格中的conv\_bn是一般convolution的基本架構，詳細在figure \ref{fig:conv_bn}，而conv\_dw是depthwise convolution，也就是Mobilenet提出的特殊結構，由兩個convolution組成，在figure \ref{fig:conv_dw}有詳細內容。仿造Mobilenet和VGG16建造的模型，最終可以得到約$66\%$的表現。}
+\end{table}
+
+
+\item 承上題，請用與上述 CNN 接近的參數量，實做簡單的 DNN model，其模型架構、訓練過程和準確率為何？試與上題結果做比較，並說明你觀察到了什麼？\\
+
+\item 觀察答錯的圖片中，哪些 class 彼此間容易用混？ 並說明你觀察到了什麼？ [繪出 confusion matrix 分析]\\
+
+\item CNN time/space complexity: For a. b. Given a CNN model as
+\begin{figure}[ht]
+    \centering
+    \includegraphics{./q4.png}
+\end{figure}\\
+And for the c. given the parameter as:
+kernel size = (k,k);
+channel size = c;
+input shape of each layer = (n,n);
+padding = p;
+strides = (s,s);
+\begin{enumerate}
+    \item How many parameters are there in each layer?\\
+
+    \item How many multiplications/additions are needed for a forward pass(each layer).\\
+    
+    \item What is the time complexity of convolutional neural networks?\\
+
+\end{enumerate}
+
+\item PCA practice:Problem statement: Given 10 samples in 3D space.\\
+(1,2,3), (4,8,5), (3,12,9), (1,8,5), (5,14,2), (7,4,1), (9,8,9), (3,8,1), (11,5,6), (10,11,7)\\
+\begin{enumerate}
+    \item What are the principal axes?\\
+
+    \item Compute the principal components for each sample.\\
+
+    \item Reconstruction error if reduced to 2D.(Calculate the L2-norm)\\
+
+\end{enumerate}
+
+\end{enumerate}
+
+\end{document}
