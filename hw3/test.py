@@ -1,7 +1,6 @@
 import load
 import model
 from args import get_args
-import data
 import torch
 import os
         
