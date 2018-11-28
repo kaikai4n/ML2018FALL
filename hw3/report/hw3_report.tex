@@ -16,31 +16,31 @@
 \item 請說明你實作的 CNN model，其模型架構、訓練過程和準確率為何？\\
 我主要使用三種類別的CNN模型架構，分別是仿Mobilenet、仿VGG和VGG改編。
 使用原本的Mobilenet與VGG的成效不好，validation大約$60\%$，因此都有做不少的變形。
-以下是我仿造的Mobilenet和VGG的模型架構table\ref{tab:Mobilenet_VGG}:\\
+以下是我的模型架構table\ref{tab:model_architecture}\\
 \begin{table}[h]
 \centering
-\begin{tabular}{|c|l|l|}\hline
-    model&Mobilenet & VGG\\ \hline
-    \multirow{12}{*}{Convolution Block}&conv\_bn(  1,  16, 1)&conv\_bn(1,16,1)\\
-    &conv\_bn( 16,  32, 1)&conv\_bn(16,32,1)\\
-    &conv\_bn( 32,  32, 2)&max\_pool\\
-    &conv\_dw( 32,  64, 1)&conv\_bn(32,64,1)\\
-    &conv\_dw( 64,  64, 1)&conv\_bn(64,64,1)\\
-    &conv\_dw( 64, 128, 2)&max\_pool\\
-    &conv\_dw(128, 256, 2)&conv\_bn(64,128,1)\\
-    &conv\_dw(256, 512, 2)&conv\_bn(128,128,1)\\ 
-    &                     &max\_pool\\
-    &                     &conv\_bn(128,256,1)\\
-    &                     &conv\_bn(256,256,1)\\
-    &                     &max\_pool\\ \hline
-    \multirow{5}{*}{Linear Block}&linear(512*3*3, 512)&linear(256*3*3,256)\\
-    &relu()&relu()\\
-    &linear(512, 7)&linear(256,32)\\
-    &&relu()\\
-    &&linear(32, 7)\\ \hline
+\begin{tabular}{|c|c|c|c|}\hline
+    model&Mobilenet & VGG&Kai3\\ \hline
+    \multirow{12}{*}{Convolution Block}&conv\_bn(  1,  16, 1)&conv\_bn(1,16,1)&conv\_bn(  1,  16, 1)\\
+    &conv\_bn( 16,  32, 1)&conv\_bn(16,32,1)&conv\_bn(16,16,1)\\
+    &conv\_bn( 32,  32, 2)&max\_pool&conv\_bn(16,32,1)\\
+    &conv\_dw( 32,  64, 1)&conv\_bn(32,64,1)&max\_pool\\
+    &conv\_dw( 64,  64, 1)&conv\_bn(64,64,1)&conv\_bn(32,64,1)\\
+    &conv\_dw( 64, 128, 2)&max\_pool&conv\_bn(64,64,1)\\
+    &conv\_dw(128, 256, 2)&conv\_bn(64,128,1)&conv\_bn(64,128,1)\\
+    &conv\_dw(256, 512, 2)&conv\_bn(128,128,1)&max\_pool\\ 
+    &                     &max\_pool&conv\_bn(128,256,1)\\
+    &                     &conv\_bn(128,256,1)&max\_pool\\
+    &                     &conv\_bn(256,256,1)&conv\_bn(128,256,1)\\
+    &                     &max\_pool&max\_pool\\ \hline
+    \multirow{5}{*}{Linear Block}&linear(512*3*3, 512)&linear(256*3*3,256)&linear(512*3*3, 512)\\
+    &relu()&relu()&BatchNorm1d(512)\\
+    &linear(512, 7)&linear(256,32)&relu()\\
+    &&relu()&linear(512, 7)\\
+    &&linear(32, 7)&\\ \hline
 \end{tabular}
-\caption{表格中的conv\_bn是一般convolution的基本架構，詳細在figure \ref{fig:conv_bn}，而conv\_dw是depthwise convolution，也就是Mobilenet提出的特殊結構，由兩個convolution組成，在figure \ref{fig:conv_dw}有詳細內容。仿造Mobilenet和VGG16建造的模型，最終可以得到約$66\%$的表現。}
-\label{tab:Mobilenet_VGG}
+\caption{表格中的conv\_bn是一般convolution的基本架構，詳細在figure \ref{fig:conv_bn}，而conv\_dw是depthwise convolution，也就是Mobilenet提出的特殊結構，由兩個convolution組成，在figure \ref{fig:conv_dw}有詳細內容。仿造Mobilenet和VGG16建造的模型，最終可以得到約$66\%$的表現。表格右方為Kai3模型的架構，經過前面Mobilenet和VGG的經驗，我設計出在這個task上更適合的模型，前段filter數少的部分多一些層數，後半段filter數大的層數少，總共四個max pool，flatten後再接到linear輸出。此模型最終可以達到$69\%$的正確率，又比前兩者高了$3\%$左右。}
+\label{tab:model_architecture}
 \end{table}
 
 \begin{figure}[h]
@@ -68,32 +68,7 @@
     \label{fig:conv_dw}
 \end{figure}
 Mobilenet和VGG16在Convolutional Block的部分和我調整過後有些微差異，他們在深度上更深，並在前半的filter數量較少，後半較多；我調整後將深度減少，並在前半段filter少的部分多做幾層，後半段大的filter層數減少。經過如此調整，正確率可以從原本的$60\%$進步到$66\%$。\\
-由於Mobilenet和VGG都是用來訓練Imagenet專用的模型架構，Imagenet有一百多萬張相片，分類目標有1000個class；相比我們的task規模較小，兩萬多張相片分類7個class。人臉表情辨識的模型不需要如他們一樣龐大的模型，精簡的就可以達到很好的效果。因此經過前人模型的經驗，我自己研發了一套模型可以達到$69\%$準確率table\ref{tab:Kai3}。
-\begin{table}[h]
-\centering
-\begin{tabular}{|c|l|}\hline
-    model&Kai3\\ \hline
-    \multirow{12}{*}{Convolution Block}&conv\_bn(  1,  16, 1)\\
-    &conv\_bn(16,16,1)\\
-    &conv\_bn(16,32,1)\\
-    &max\_pool\\
-    &conv\_bn(32,64,1)\\
-    &conv\_bn(64,64,1)\\
-    &conv\_bn(64,128,1)\\
-    &max\_pool\\
-    &conv\_bn(128,256,1)\\
-    &max\_pool\\
-    &conv\_bn(256,512,1)\\
-    &max\_pool\\ \hline
-    \multirow{4}{*}{Linear Block}&linear(512*3*3, 512)\\
-    &BatchNorm1d(512)\\
-    &relu()\\
-    &linear(512, 7)\\ \hline
-\end{tabular}
-\caption{表格為Kai3模型的架構，經過前面Mobilenet和VGG的經驗，我設計出在這個task上更適合的模型，前段filter數少的部分多一些層數，後半段filter數大的層數少，總共四個max pool，flatten後再接到linear輸出。此模型最終可以達到$69\%$的正確率，又比前兩者高了$3\%$左右。}
-\label{tab:Kai3}
-\end{table}
-
+由於Mobilenet和VGG都是用來訓練Imagenet專用的模型架構，Imagenet有一百多萬張相片，分類目標有1000個class；相比我們的task規模較小，兩萬多張相片分類7個class。人臉表情辨識的模型不需要如他們一樣龐大的模型，精簡的就可以達到很好的效果。因此經過前人模型的經驗，我自己研發了一套Kai3模型可以達到$69\%$準確率。\par
 訓練過程使用batch size 128，learning rate 0.0005。兩者參數均調整過，batch size過大過小都效果不好；而learning rate=0.0005的準確率表現比0.001來得好，而更低的learning rate又會訓練過慢，所以我選用0.0005。\par
 我額外將Kai3模型做了細微變形，有Kai, Kai2, Kai4模型。最終準確率如table\ref{tab:accuracy}。
 \begin{table}[h]
@@ -117,9 +92,20 @@ Mobilenet和VGG16在Convolutional Block的部分和我調整過後有些微差�
 在table\ref{tab:accuracy}中可以看出，DNN架構明顯表現很差，大約$40\%$正確率而已，模型架構為多層的fully connected linear layers，activation function一樣是ReLU，訓練hyperparameters如同CNN的所有模型。因為DNN比較難區別小區塊內的特徵，不像CNN有3*3或5*5的filter，當遇到相似圖形特徵就會被激發，這就是CNN模型會勝過DNN的直觀解釋。
 
 \item 觀察答錯的圖片中，哪些 class 彼此間容易用混？ 並說明你觀察到了什麼？ [繪出 confusion matrix 分析]\\
+我用正確率最高的模型Kai3，切train:validation = 9:1，train完的模型在validation上的表現畫成confusion matrix如圖figure \ref{fig:confusion_matrix}。\par
+最明顯的是disgust這個class完全分類不出來，原因是training data的比例有明顯的少，所佔的比例只有$1.5\%$，因為每筆資料答錯被懲罰所占的比重都一樣，所以模型選擇直接放棄判斷這類型的class，要改善此問題有兩個方法，第一是增加這部分的training data，使他的比重和其他種類的差不多，第二是增加犯錯懲罰的比重，加在loss當中，讓模型知道要特別注重這個class。\par
+另外可以發現，沿著斜對角線的格子會對稱，同時錯很多或同時錯很少。例如sad和neutral、fear和sad、surprise和fear，都是同會有將近$10\%$的比例會混淆，而happy和angry、sad和surprise就幾乎不會混淆。這個結果很合乎常理，因為快樂和生氣或是悲傷和驚訝都是反差很大的表情，機器應該可以輕易分別這個不同；相反的，傷心害怕都是臉部表情比較不激烈的肢體語言，機器要分辨就會難度變高許多，因此混淆率增加是合理的。
+\begin{figure}[h]
+    \centering
+    \includegraphics{./confusion_matrix_normalized.png}
+    %\includegraphics[width=0.42\paperwidth]{./confusion_matrix_normalized.png}
+    %\includegraphics[width=0.42\paperwidth]{./confusion_matrix_origin.png}
+    \caption{圖是normalize過後的比例，表示Kai3模型在validation set上的表現，y軸是正確的label，x軸是模型的預測，顏色越深代表比例越重。}
+    \label{fig:confusion_matrix}
+\end{figure}
 
 \item CNN time/space complexity: For a. b. Given a CNN model as
-\begin{figure}[ht]
+\begin{figure}[h]
     \centering
     \includegraphics{./q4.png}
 \end{figure}\\
