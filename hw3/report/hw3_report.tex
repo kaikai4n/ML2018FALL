@@ -14,7 +14,7 @@
 
 \begin{enumerate}
 \item 請說明你實作的 CNN model，其模型架構、訓練過程和準確率為何？\\
-我主要使用三種類別的CNN模型架構，分別是仿Mobilenet、仿VGG和VGG改編。
+我主要使用三種類別的CNN模型架構，分別是仿Mobilenet、仿VGG和Kai3。
 使用原本的Mobilenet與VGG的成效不好，validation大約$60\%$，因此都有做不少的變形。
 以下是我的模型架構table\ref{tab:model_architecture}\\
 \begin{table}[h]
@@ -39,7 +39,7 @@
     &&relu()&linear(512, 7)\\
     &&linear(32, 7)&\\ \hline
 \end{tabular}
-\caption{表格中的conv\_bn是一般convolution的基本架構，詳細在figure \ref{fig:conv_bn}，而conv\_dw是depthwise convolution，也就是Mobilenet提出的特殊結構，由兩個convolution組成，在figure \ref{fig:conv_dw}有詳細內容。仿造Mobilenet和VGG16建造的模型，最終可以得到約$66\%$的表現。表格右方為Kai3模型的架構，經過前面Mobilenet和VGG的經驗，我設計出在這個task上更適合的模型，前段filter數少的部分多一些層數，後半段filter數大的層數少，總共四個max pool，flatten後再接到linear輸出。此模型最終可以達到$69\%$的正確率，又比前兩者高了$3\%$左右。}
+\caption{表格中的conv\_bn是一般convolution的基本架構，詳細在figure \ref{fig:conv_bn}，而conv\_dw是depthwise convolution，也就是Mobilenet提出的特殊結構，由兩個convolution組成，在figure \ref{fig:conv_dw}有詳細內容。表格左方兩者為仿造Mobilenet和VGG16建造的模型，最終可以得到約$66\%$的表現。表格右方為Kai3模型的架構，經過前面Mobilenet和VGG的經驗，我設計出在這個task上更適合的模型，前段filter數少的部分多一些層數，後半段filter數大的層數少，總共四個max pool，flatten後再接到linear輸出。此模型最終可以達到$69\%$的正確率，又比前兩者高了$3\%$。}
 \label{tab:model_architecture}
 \end{table}
 
@@ -89,7 +89,7 @@ Mobilenet和VGG16在Convolutional Block的部分和我調整過後有些微差�
 \end{table}
 
 \item 承上題，請用與上述 CNN 接近的參數量，實做簡單的 DNN model，其模型架構、訓練過程和準確率為何？試與上題結果做比較，並說明你觀察到了什麼？\\
-在table\ref{tab:accuracy}中可以看出，DNN架構明顯表現很差，大約$40\%$正確率而已，模型架構為多層的fully connected linear layers，activation function一樣是ReLU，訓練hyperparameters如同CNN的所有模型。因為DNN比較難區別小區塊內的特徵，不像CNN有3*3或5*5的filter，當遇到相似圖形特徵就會被激發，這就是CNN模型會勝過DNN的直觀解釋。
+在table\ref{tab:accuracy}中可以看出，DNN架構明顯表現很差，大約$40\%$正確率而已，模型架構為多層的fully connected linear layers，activation function一樣是ReLU，訓練hyperparameters如同CNN的所有模型。因為DNN比較難區別小區塊內的特徵，不像CNN有3*3或5*5的filter，當遇到相似圖形特徵就會被激發，這就是CNN模型會勝過DNN的直觀解釋。另外，CNN使用參數的效率比DNN來得好，DNN在每個pixel上都要有一個相對應的參數，而CNN則是同一塊filter重複利用，會使得DNN模型較厚重，參數使用效率不佳，在差不多參數的情況下，表現自然會比較糟。
 
 \item 觀察答錯的圖片中，哪些 class 彼此間容易用混？ 並說明你觀察到了什麼？ [繪出 confusion matrix 分析]\\
 我用正確率最高的模型Kai3，切train:validation = 9:1，train完的模型在validation上的表現畫成confusion matrix如圖figure \ref{fig:confusion_matrix}。\par
@@ -97,18 +97,18 @@ Mobilenet和VGG16在Convolutional Block的部分和我調整過後有些微差�
 另外可以發現，沿著斜對角線的格子會對稱，同時錯很多或同時錯很少。例如sad和neutral、fear和sad、surprise和fear，都是同會有將近$10\%$的比例會混淆，而happy和angry、sad和surprise就幾乎不會混淆。這個結果很合乎常理，因為快樂和生氣或是悲傷和驚訝都是反差很大的表情，機器應該可以輕易分別這個不同；相反的，傷心害怕都是臉部表情比較不激烈的肢體語言，機器要分辨就會難度變高許多，因此混淆率增加是合理的。
 \begin{figure}[h]
     \centering
-    \includegraphics{./confusion_matrix_normalized.png}
+    \includegraphics[scale=0.8]{./confusion_matrix_normalized.png}
     %\includegraphics[width=0.42\paperwidth]{./confusion_matrix_normalized.png}
     %\includegraphics[width=0.42\paperwidth]{./confusion_matrix_origin.png}
     \caption{圖是normalize過後的比例，表示Kai3模型在validation set上的表現，y軸是正確的label，x軸是模型的預測，顏色越深代表比例越重。}
     \label{fig:confusion_matrix}
 \end{figure}
 
-\item CNN time/space complexity: For a. b. Given a CNN model as
-\begin{figure}[h]
-    \centering
-    \includegraphics{./q4.png}
-\end{figure}\\
+\item CNN time/space complexity: For a. b. Given a CNN model as\par
+%\begin{figure}[h]
+%    \centering
+    \includegraphics{./q4.png}\par
+%\end{figure}\\
 And for the c. given the parameter as:
 kernel size = (k,k);
 channel size = c;
@@ -132,9 +132,14 @@ strides = (s,s);
         addition: 1*1*(2*2*6-1) * 4 = 92\\
     \end{enumerate}
     \item What is the time complexity of convolutional neural networks?\\
-    output size: $(\lfloor\frac{n-k+2p}{s}\rfloor + 1)^2\cdot c \leq (\frac{n-k+2p}{s}+1)^2\cdot c$\par
-    total multiplication and addition $\leq output\_size \cdot 2k^2$\par
-    total time complexity is $O((\frac{n-k+2p}{s}+1)^2 c 2k^2 L) = O((\frac{n-k+2p}{s}+1)^2 c k^2 L)$.
+    \begin{itemize}
+        \item For one layer:\par
+        output size: $(\lfloor\frac{n-k+2p}{s}\rfloor + 1)^2\cdot c_{out} \leq (\frac{n-k+2p}{s}+1)^2\cdot c_{out}$\par
+        total multiplication and addition $= output\_size \cdot (k^2 + k^2-1) \cdot c_{in} \leq (\frac{n-k+2p}{s}+1)^2\cdot c_{out} \cdot 2(k^2) \cdot c_{in}$\par
+        time complexity is $O((\frac{n-k+2p}{s})^2 c_{in} c_{out} k^2)$.\par
+        \item Total Layers:\par
+        time complexite is $O(\sum\limits^l_{i=2}(\frac{n_i-k_i+2p_i}{s_i})^2 c_{i-1} c_{i} k_i^2)$.
+    \end{itemize}
     \iffalse
         1 + s*(time-1) + k-1 >= n, 1 + s*(time-2) + k-1 < n
         (n-k) / s + 2 > time >= (n-k) / s + 1
