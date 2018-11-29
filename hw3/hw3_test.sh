@@ -8,7 +8,7 @@ wget -O Kai_models_e2500.pt 'https://www.dropbox.com/s/9r4d0gnx5vufw4q/Kai_model
 # model Kai2
 wget -O Kai2_models_e500.pt 'https://www.dropbox.com/s/epac64re3d5aegf/Kai2_models_e500.pt?dl=1'
 # model Kai3
-wget -O Kai3_models_e3000.pt 'https://www.dropbox.com/s/nb0wzp5arhh6o4v/Kai3_valid_models_e3000.pt?dl=1'
+wget -O Kai3_models_e3000.pt 'https://www.dropbox.com/s/9qaa2l43hzi9x2o/Kai3_models_e3000.pt?dl=1'
 # model Kai4
 wget -O Kai4_models_e500.pt 'https://www.dropbox.com/s/86e7hb3n86f1lbf/Kai4_models_e500.pt?dl=1'
 
