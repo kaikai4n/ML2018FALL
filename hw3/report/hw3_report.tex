@@ -78,11 +78,11 @@ Mobilenet和VGG16在Convolutional Block的部分和我調整過後有些微差�
         DNN&0.400&0.416\\ \hline
         Mobilenet&0.666&0.660\\ \hline
         VGG&0.662&0.667\\ \hline
-        Kai&&\\ \hline
-        Kai2&&\\ \hline
-        Kai3&0.685&\\ \hline
-        Kai4&&\\ \hline
-        ensemble&-&\\ \hline
+        Kai&0.655&0.675\\ \hline
+        Kai2&0.668&0.671\\ \hline
+        Kai3&0.685&0.690\\ \hline
+        Kai4&0.670&0.681\\ \hline
+        ensemble&-&\textbf{0.702}\\ \hline
     \end{tabular}
     \caption{不同模型的正確率，validation切9:1，testing為kaggle分數。}
     \label{tab:accuracy}
@@ -117,22 +117,83 @@ padding = p;
 strides = (s,s);
 \begin{enumerate}
     \item How many parameters are there in each layer?\\
-
-    \item How many multiplications/additions are needed for a forward pass(each layer).\\
-    
+    如果不考慮bias的話，考慮的話要再加上filter數量的參數。
+    \begin{enumerate}
+        \item Layer A: 2*2*5*6  = 120
+        \item Layer B: 2*2*6*4  = 96
+    \end{enumerate}
+    \item How many multiplications/additions are needed for a forward pass(each layer).(hint:不用考慮bias)\\
+    \begin{enumerate}
+        \item Layer A: \\
+        multiply: 3*3*(2*2*5) * 6 = 1080\\
+        addition: 3*3*(2*2*5-1) * 6 = 1026\\
+        \item Layer B: \\
+        multiply: 1*1*(2*2*6) * 4 = 96\\
+        addition: 1*1*(2*2*6-1) * 4 = 92\\
+    \end{enumerate}
     \item What is the time complexity of convolutional neural networks?\\
-
+    output size: $(\lfloor\frac{n-k+2p}{s}\rfloor + 1)^2\cdot c \leq (\frac{n-k+2p}{s}+1)^2\cdot c$\par
+    total multiplication and addition $\leq output\_size \cdot 2k^2$\par
+    total time complexity is $O((\frac{n-k+2p}{s}+1)^2 c 2k^2 L) = O((\frac{n-k+2p}{s}+1)^2 c k^2 L)$.
+    \iffalse
+        1 + s*(time-1) + k-1 >= n, 1 + s*(time-2) + k-1 < n
+        (n-k) / s + 2 > time >= (n-k) / s + 1
+        time = upper((n-k)/s) + 1
+        add padding:
+        time = upper((n-k+2p)/s) + 1
+    \fi
 \end{enumerate}
 
 \item PCA practice:Problem statement: Given 10 samples in 3D space.\\
 (1,2,3), (4,8,5), (3,12,9), (1,8,5), (5,14,2), (7,4,1), (9,8,9), (3,8,1), (11,5,6), (10,11,7)\\
 \begin{enumerate}
     \item What are the principal axes?\\
-
+    Calculate step by step:
+    \begin{enumerate}
+        \item input
+        \begin{align*}X = array([&[ 1,  2,  3],\\
+       &[ 4,  8,  5],\\
+       &[ 3, 12,  9],\\
+       &[ 1,  8,  5],\\
+       &[ 5, 14,  2],\\
+       &[ 7,  4,  1],\\
+       &[ 9,  8,  9],\\
+       &[ 3,  8,  1],\\
+       &[11,  5,  6],\\
+       &[10, 11,  7]])\end{align*}
+       \item covariance matrix\\
+       \begin{align*}
+            Cov = array([&[1.486, 0.061 , 0.404],\\
+                   &[0.061 , 1.506, 0.358],\\
+                   &[0.404, 0.358, 1.007]])
+       \end{align*}
+       \item eigen value and eigen vector\\
+       \begin{align*}
+            eigen\_value = array(&[0.675, 1.435, 1.888])\\
+            eigen\_vector = array([&[ 0.399, -0.678, -0.616],\\
+            &[ 0.337,  0.734, -0.588],\\
+            &[-0.852, -0.027, -0.522]])
+       \end{align*}
+    \item principle axis 1: the axis with the largest eigen value $1.888$\\
+    $[-0.616, -0.588, -0.522]$\\
+    principle axis 2: the axis with the second largest eigen value $1.435$\\
+    $[-0.678,0.734,-0.027]$\\
+    principle axis 3: the last axis with eigen value $0.675$\\
+    $[0.399,0.337,-0.852]$
+    \end{enumerate}
     \item Compute the principal components for each sample.\\
-
+    principle component is the eigen vector sorted with eigen value:
+    $\begin{bmatrix}
+        -0.616&-0.588&-0.522\\
+        0.678&-0.734&0.027\\
+        0.399&0.337&-0.852\\
+    \end{bmatrix}$
     \item Reconstruction error if reduced to 2D.(Calculate the L2-norm)\\
-
+    \begin{align*}
+        Loss &= \frac{min(eigen\_values)}{\sqrt{\sum\limits^3_{i=1}eigen\_value_i^2}}\\
+        &= \frac{0.675}{\sqrt{0.675^2+1.435^2+1.888^2}}\\
+        &= 0.273\\
+    \end{align*}
 \end{enumerate}
 
 \end{enumerate}
