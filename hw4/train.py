@@ -1,7 +1,8 @@
 from data import DataLoader
 import model
 from args import get_args
-
+import numpy as np
+import torch
 
 def train(
         total_data,
@@ -19,9 +20,15 @@ def train(
             )
     for epoch in range(epoches):
         for step, (x, y) in enumerate(train_loader):
+            pass
+
+def set_random_seed(seed):
+    torch.manual_seed(seed)
+    np.random.seed(seed)
 
 def main():
     args = get_args(train=True)
+    set_random_seed(args.seed)
     if args.load_word_dict:
         dl = DataLoader(
                 create_word_dict=False,
