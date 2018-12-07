@@ -1,5 +1,6 @@
 import pickle
 import numpy as np
+from torch.utils.data import Dataset
 
 class DataLoader():
     def __init__(self, 
@@ -60,6 +61,13 @@ class DataLoader():
         #print('To numpy...')
         #content = self._to_numpy(content)
         return content
+    
+    def load_data_y(self, filename, encoding='utf-8'):
+        content = self.read_csv(filename, encoding).split('\n')
+        del content[-1]
+        del content[0]
+        content = [int(ele.split(',', 1)[-1]) for ele in content]
+        return content
 
     def _to_one_hot_value(self, content, max_sentence_len=2000):
         print('To word dictionary value...')
@@ -69,8 +77,9 @@ class DataLoader():
                 [self._word_dict[word] for word in line][:max_sentence_len-1]+ \
                 [self._word_dict['<EOS>']] for line in content]
         print('Start padding...')
-        sentence_length = [len(sentence) for sentence in transformed_content]
-        max_length = max(sentence_length)
+        self._sentence_length = [len(sentence) \
+                for sentence in transformed_content]
+        max_length = max(self._sentence_length)
         padded_content = self._pad_equal_length(transformed_content,\
                 max_length)
         return padded_content
@@ -82,6 +91,22 @@ class DataLoader():
 
     def _to_numpy(self, content):
         return np.asarray(content)
+
+    def get_sentence_length(self):
+        return self._sentence_length
+
+class DcardDataset(Dataset):
+    def __init__(self, x, y, length):
+        super(DcardDataset, self).__init__()
+        self._x = x
+        self._y = y
+        self._length = length
+
+    def __len__(self):
+        return self._length
+
+    def __getitem__(self, i):
+        return self._x[i], self._y[i]
 
 if __name__ == '__main__':
     # example for loading word dictionary from file
