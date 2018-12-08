@@ -2,6 +2,7 @@ import pickle
 import numpy as np
 from torch.utils.data import Dataset
 import torch
+import random
 
 class DataLoader():
     def __init__(self, 
@@ -120,6 +121,18 @@ def customed_collate_fn(batch):
     y = torch.tensor(y, dtype=torch.long)
     length = torch.tensor(length, dtype=torch.long)
     return x, y, length
+
+def cut_validation(total_data, data_list, shuffle=True, propotion=0.95):
+    # data_list contain [x, y, length]
+    # propotion is [0, 1]
+    if shuffle:
+        shuffle_indexes = list(range(total_data))
+        random.shuffle(shuffle_indexes)
+        data_list = [[data_[i] for i in shuffle_indexes] for data_ in data_list]
+    total_train = int(total_data * propotion)
+    train, valid = zip(*[(data_[:total_train], data_[total_train:]) \
+            for data_ in data_list])
+    return (total_train,)+train, (total_data-total_train,)+valid
 
 if __name__ == '__main__':
     # example for loading word dictionary from file
