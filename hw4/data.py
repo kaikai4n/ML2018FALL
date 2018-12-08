@@ -111,9 +111,6 @@ class DcardDataset(Dataset):
 
     def __getitem__(self, i):
         return self._x[i], self._y[i], self._length[i]
-        return torch.tensor(self._x[i]), \
-                torch.tensor(self._y[i], dtype=torch.uint8), \
-                torch.tensor(self._length[i], dtype=torch.int)
 
 def customed_collate_fn(batch):
     # sort by sentence length
