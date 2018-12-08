@@ -2,6 +2,7 @@ import pickle
 import torch
 import numpy as np
 import os
+import random
     
 def check_save_path(prefix, validation):
     # process saveing path
@@ -11,9 +12,9 @@ def check_save_path(prefix, validation):
     log_save_path = os.path.join('logs', prefix + '.log')
     with open(log_save_path, 'w') as f_log:
         if validation:
-            f_log.write('epoch,loss,validation\n')
+            f_log.write('epoch,loss,accuracy,validation loss,validation accuracy\n')
         else:
-            f_log.write('epoch,loss\n')
+            f_log.write('epoch,loss,accuracy\n')
     # model path
     if os.path.isdir('models') == False:
         os.mkdir('models')
@@ -32,3 +33,4 @@ def save_training_args(args, path):
 def set_random_seed(seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
+    random.seed(seed)
