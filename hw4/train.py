@@ -9,6 +9,8 @@ from utils import save_training_args
 from utils import check_save_path
 from utils import set_random_seed
 import os
+import sys
+import time
 
 def train(
         total_data,
@@ -91,10 +93,12 @@ def train(
     
     print('Start training...')
     for epoch in range(epoches):
+        start_time = time.time()
         total_loss, total_steps, total_accu = 0.0, 0.0, 0.0
         for step, (x, y, length) in enumerate(train_loader):
-            import sys
-            sys.stdout.write('\rstep: %03d ' % step)
+            duration = time.time() - start_time
+            sys.stdout.write('\rduration: %06.1f, step: %04d ' \
+                    % (duration, step))
             sys.stdout.flush()
             if use_cuda:
                 x, y, length = x.cuda(), y.cuda(), length.cuda()
@@ -121,7 +125,9 @@ def train(
                     total_valid_accu += \
                             float(torch.sum(torch.argmax(
                                 pred_valid_y, dim=1) == y).cpu())
-                total_valid_accu = total_valid_accu / total_valid
+                    total_valid_step += 1
+                total_valid_loss /= total_valid_step
+                total_valid_accu /= total_valid
                 my_model.train()
             progress_msg = 'epoch:%3d, loss:%.3f, accuracy:%.3f, valid:%.3f, accuracy:%.3f'\
                     % (epoch, total_loss, total_accu, \
