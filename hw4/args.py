@@ -65,6 +65,24 @@ def get_args(train=True):
                 type=str,
                 help='The initialization parameters \
                         from a given model name.')
+        parser.add_argument('--hidden_size',
+                default=256,
+                type=int,
+                help='The hidden size of RNN.')
+        parser.add_argument('--embed_dim',
+                default=128,
+                type=int,
+                help='The word embedding dimension.')
+        parser.add_argument('--dropout_rate',
+                default=0.0,
+                type=float,
+                help='The dropout rate for RNN')
+        parser.add_argument('--no_bidirectional',
+                default=True,
+                action='store_false',
+                help='To specify not to use bidirectional\
+                        for RNN.')
+                
     else:
         parser.add_argument('--ensemble',
                 default=False,
