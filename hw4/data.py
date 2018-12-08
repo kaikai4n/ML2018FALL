@@ -1,6 +1,7 @@
 import pickle
 import numpy as np
 from torch.utils.data import Dataset
+import torch
 
 class DataLoader():
     def __init__(self, 
@@ -23,9 +24,11 @@ class DataLoader():
             if word_dict_filename is None:
                 raise Exception('"word_dict_filename" saving word dict\
                         is not given')
-            with open(word_dict_filename, 'wb') as f:
-                pickle.dump(self._word_dict, f)
+            self._save_word_dict(word_dict_filename)
 
+    def _save_word_dict(self, filename):
+        with open(filename, 'wb') as f:
+            pickle.dump(self._word_dict, f)
 
     def _load_word_dict(self, filename):
         with open(filename, 'rb') as f:
@@ -39,8 +42,8 @@ class DataLoader():
                 if ele not in self._word_dict:
                     self._word_dict[ele] = len(self._word_dict)
     
-    def get_word_dict(self):
-        return self._word_dict
+    def get_word_dict_len(self):
+        return len(self._word_dict)
 
     def read_csv(self, filename, encoding='utf-8'):
         with open(filename, 'r', encoding=encoding) as f:
@@ -72,9 +75,9 @@ class DataLoader():
     def _to_one_hot_value(self, content, max_sentence_len=2000):
         print('To word dictionary value...')
         transformed_content = [[self._word_dict['<SOS>']] + \
-                [self._word_dict[word] for word in line] \
-                if len(line) <= max_sentence_len else \
-                [self._word_dict[word] for word in line][:max_sentence_len-1]+ \
+                ([self._word_dict[word] for word in line] \
+                if len(line) <= max_sentence_len-2 else \
+                [self._word_dict[word] for word in line][:max_sentence_len-2]) + \
                 [self._word_dict['<EOS>']] for line in content]
         print('Start padding...')
         self._sentence_length = [len(sentence) \
@@ -96,17 +99,30 @@ class DataLoader():
         return self._sentence_length
 
 class DcardDataset(Dataset):
-    def __init__(self, x, y, length):
+    def __init__(self, total_data, x, y, length):
         super(DcardDataset, self).__init__()
         self._x = x
         self._y = y
+        self._total_data = total_data
         self._length = length
 
     def __len__(self):
-        return self._length
+        return self._total_data
 
     def __getitem__(self, i):
-        return self._x[i], self._y[i]
+        return self._x[i], self._y[i], self._length[i]
+        return torch.tensor(self._x[i]), \
+                torch.tensor(self._y[i], dtype=torch.uint8), \
+                torch.tensor(self._length[i], dtype=torch.int)
+
+def customed_collate_fn(batch):
+    # sort by sentence length
+    batch = sorted(batch, key=lambda x: -x[2])
+    x, y, length = zip(*batch)
+    x = torch.tensor(x, dtype=torch.long)
+    y = torch.tensor(y, dtype=torch.long)
+    length = torch.tensor(length, dtype=torch.long)
+    return x, y, length
 
 if __name__ == '__main__':
     # example for loading word dictionary from file
