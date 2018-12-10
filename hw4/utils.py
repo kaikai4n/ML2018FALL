@@ -30,6 +30,11 @@ def save_training_args(args, path):
     with open(path, 'wb') as f:
         pickle.dump(args, f)
 
+def load_training_args(path):
+    with open(path, 'rb') as f:
+        object_ = pickle.load(f)
+    return object_
+
 def set_random_seed(seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
