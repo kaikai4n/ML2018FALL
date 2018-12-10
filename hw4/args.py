@@ -31,7 +31,7 @@ def get_args(train=True):
             type=int,
             help='Random seed for numpy and torch.')
     parser.add_argument('-b', '--batch_size',
-            default=128,
+            default=512,
             type=int,
             help='The batch size for training.')
     parser.add_argument('--load_word_dict',
@@ -49,12 +49,12 @@ def get_args(train=True):
                 help='To split validation or not.')
         parser.add_argument('-e', '--epoches',
                 type=int,
-                default=100)
+                default=50)
         parser.add_argument('-lr', '--learning_rate',
                 type=float,
                 default=0.001)
         parser.add_argument('--save_intervals',
-                default=10,
+                default=5,
                 type=int,
                 help='The epoch intervals to save models')
         parser.add_argument('--prefix',
@@ -69,6 +69,10 @@ def get_args(train=True):
                 default=256,
                 type=int,
                 help='The hidden size of RNN.')
+        parser.add_argument('--rnn_layers',
+                default=1,
+                type=int,
+                help='The rnn layers.')
         parser.add_argument('--embed_dim',
                 default=128,
                 type=int,
@@ -99,6 +103,10 @@ def get_args(train=True):
                 nargs='*',
                 help='When ensemble is True, this argument\
                         is required.')
+        parser.add_argument('--args_filename',
+                required=True,
+                help='When initializing model, it is neccessary\
+                        to give the training arguments from a file.')
         parser.add_argument('--output',
                 default='ans.csv',
                 help='When inferencing, the designated output\
