@@ -25,6 +25,7 @@ def train(
         vocabulary_size,
         embed_dim,
         hidden_size,
+        rnn_layers,
         dropout_rate,
         bidirectional,
         learning_rate,
@@ -44,6 +45,8 @@ def train(
                 shuffle=True)
         total_train, train_x, train_y, train_length = train_data
         total_valid, valid_x, valid_y, valid_length = valid_data
+    else:
+        total_train = total_data
 
     # make dataset
     dcard_train_dataset = DcardDataset(
@@ -82,6 +85,7 @@ def train(
             'vocabulary_size': vocabulary_size,
             'embed_dim': embed_dim,
             'hidden_size': hidden_size,
+            'rnn_layers': rnn_layers,
             'dropout': dropout_rate,
             'bidirectional': bidirectional}
     save_training_args(training_args, save_args_path)
@@ -89,7 +93,8 @@ def train(
     my_model = my_model.cuda() if use_cuda else my_model
 
     optimizer = torch.optim.Adam(my_model.parameters(), lr=learning_rate)
-    loss_func = torch.nn.CrossEntropyLoss()
+    #loss_func = torch.nn.CrossEntropyLoss()
+    loss_func = torch.nn.BCELoss()
     
     print('Start training...')
     for epoch in range(epoches):
@@ -103,16 +108,18 @@ def train(
             if use_cuda:
                 x, y, length = x.cuda(), y.cuda(), length.cuda()
             optimizer.zero_grad()
-            pred_y = my_model.forward(x, length)
+            pred_y = my_model.forward(x, length).squeeze()
             loss = loss_func(pred_y, y)
             loss.backward()
             optimizer.step()
             total_loss += float(loss.cpu())
-            total_accu += float(torch.sum(torch.argmax(pred_y, dim=1) == y).cpu())
+            pred_y[pred_y >= 0.5] = 1.0
+            pred_y[pred_y < 0.5] = 0.0
+            total_accu += float(torch.sum(pred_y == y).cpu())
             total_steps += 1
 
         total_loss /= total_steps
-        total_accu /= total_data
+        total_accu /= total_train
         if validation:
             with torch.no_grad():
                 my_model.eval()
@@ -120,11 +127,12 @@ def train(
                 for step, (x, y, length) in enumerate(valid_loader):
                     if use_cuda:
                         x, y, length = x.cuda(), y.cuda(), length.cuda()
-                    pred_valid_y = my_model.forward(x, length)
+                    pred_valid_y = my_model.forward(x, length).squeeze()
                     total_valid_loss += float(loss_func(pred_valid_y, y).cpu())
+                    pred_valid_y[pred_valid_y >= 0.5] = 1.0
+                    pred_valid_y[pred_valid_y < 0.5] = 0.0
                     total_valid_accu += \
-                            float(torch.sum(torch.argmax(
-                                pred_valid_y, dim=1) == y).cpu())
+                            float(torch.sum(pred_valid_y == y).cpu())
                     total_valid_step += 1
                 total_valid_loss /= total_valid_step
                 total_valid_accu /= total_valid
@@ -178,6 +186,7 @@ def main():
             vocabulary_size=word_dict_len,
             embed_dim=args.embed_dim,
             hidden_size=args.hidden_size,
+            rnn_layers=args.rnn_layers,
             dropout_rate=args.dropout_rate,
             bidirectional=args.no_bidirectional,
             learning_rate=args.learning_rate,
