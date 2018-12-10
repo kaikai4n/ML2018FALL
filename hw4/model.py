@@ -12,6 +12,7 @@ class BaseModel(torch.nn.Module):
                 input_size=input_dim,
                 hidden_size=hidden_size,
                 batch_first=True,
+                num_layers=self._rnn_layers,
                 dropout=self._dropout,
                 bidirectional=self._bidirectional,)
         return gru
@@ -30,6 +31,8 @@ class BaseModel(torch.nn.Module):
             torch.save(status, f_model)
     
     def load(self, filename):
+        if filename is None:
+            raise Exception('Error when loading model: filename not given.')
         status = torch.load(filename)
         self.load_state_dict(status['state_dict'])
     
@@ -43,22 +46,23 @@ class RNN(BaseModel):
         # dropout: dropout rate of RNN 
         # bidirectional: RNN is bidirectional or not
         super(RNN, self).__init__(args)
-        if train:
-            self._init_network()
-        else:
+        self._init_network()
+        if train == False:
             self.load(self._load_model_filename)
 
     def _init_network(self):
         self._embedding = torch.nn.Embedding(
                 self._vocabulary_size, self._embed_dim)
         self._rnn = self._gru(self._embed_dim, self._hidden_size)
+        self._hidden_multiply = self._rnn_layers
+        if self._bidirectional:
+            self._hidden_multiply *= 2
         self._linear = torch.nn.Sequential(
-                    torch.nn.Linear(
-                        2*self._hidden_size if self._bidirectional\
-                                else self._hidden_size, 32),
+                    torch.nn.Linear(self._hidden_multiply*self._hidden_size, 32),
+                    torch.nn.Dropout(0.5),
                     self._relu(),
-                    torch.nn.Linear(32, 2),
-                    self._softmax(),
+                    torch.nn.Linear(32, 1),
+                    torch.nn.Sigmoid(),
                 )
 
     def forward(self, x, x_length):
