@@ -73,7 +73,7 @@ class DataLoader():
         content = [int(ele.split(',', 1)[-1]) for ele in content]
         return content
 
-    def _to_one_hot_value(self, content, max_sentence_len=2000):
+    def _to_one_hot_value(self, content, max_sentence_len=500):
         print('To word dictionary value...')
         transformed_content = [[self._word_dict['<SOS>']] + \
                 ([self._word_dict[word] for word in line] \
@@ -118,7 +118,7 @@ def customed_collate_fn(batch):
     batch = sorted(batch, key=lambda x: -x[2])
     x, y, length = zip(*batch)
     x = torch.tensor(x, dtype=torch.long)
-    y = torch.tensor(y, dtype=torch.long)
+    y = torch.tensor(y, dtype=torch.float)
     length = torch.tensor(length, dtype=torch.long)
     return x, y, length
 
