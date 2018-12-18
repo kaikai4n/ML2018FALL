@@ -2,11 +2,13 @@ import argparse
 import model
 
 def check_model(model_name):
+    if model_name is None:
+        raise Exception('Model name must be provided.')
     try:
         model_object = getattr(model, model_name)
     except AttributeError:
-        print('Model not found:', model_name)
-        exit()
+        raise Exception('Model not found:', model_name)
+        
 
 def get_args(train=True):
     parser = argparse.ArgumentParser()
