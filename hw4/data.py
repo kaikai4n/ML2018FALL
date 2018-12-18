@@ -46,6 +46,9 @@ class DataLoader():
     def get_word_dict_len(self):
         return len(self._word_dict)
 
+    def look_up_word_dict(self, key):
+        return self._word_dict[key]
+
     def read_csv(self, filename, encoding='utf-8'):
         with open(filename, 'r', encoding=encoding) as f:
             content = f.read()
