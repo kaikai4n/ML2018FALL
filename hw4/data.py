@@ -74,22 +74,13 @@ class DataLoader():
         del content[-1]
         del content[0]
         content = [int(ele.split(',', 1)[-1]) for ele in content]
+        content = self._to_one_hot_value(content)
         return content
 
     def _to_one_hot_value(self, content, max_sentence_len=500):
         print('To word dictionary value...')
-        transformed_content = [[self._word_dict['<SOS>']] + \
-                ([self._word_dict[word] for word in line] \
-                if len(line) <= max_sentence_len-2 else \
-                [self._word_dict[word] for word in line][:max_sentence_len-2]) + \
-                [self._word_dict['<EOS>']] for line in content]
-        print('Start padding...')
-        self._sentence_length = [len(sentence) \
-                for sentence in transformed_content]
-        max_length = max(self._sentence_length)
-        padded_content = self._pad_equal_length(transformed_content,\
-                max_length)
-        return padded_content
+        transformed_content = [[self._word_dict[word] for word in line] for line in content]        
+        return transformed_content
 
     def _pad_equal_length(self, content, length):
         padded_content = [ele + (length-len(ele))*[self._word_dict['<PAD>']] \
@@ -103,27 +94,28 @@ class DataLoader():
         return self._sentence_length
 
 class DcardDataset(Dataset):
-    def __init__(self, total_data, x, y, length):
+    def __init__(self, total_data, x, y, bag_of_word_len):
         super(DcardDataset, self).__init__()
         self._x = x
         self._y = y
         self._total_data = total_data
-        self._length = length
+        self._bag_of_word_len = bag_of_word_len
 
     def __len__(self):
         return self._total_data
 
     def __getitem__(self, i):
-        return self._x[i], self._y[i], self._length[i]
+        x = torch.zeros(self._bag_of_word_len)
+        for number in self._x[i]:
+            x[number] += 1
+        return x, self._y[i]
 
 def customed_collate_fn(batch):
     # sort by sentence length
-    batch = sorted(batch, key=lambda x: -x[2])
-    x, y, length = zip(*batch)
-    x = torch.tensor(x, dtype=torch.long)
+    x, y = zip(*batch)
+    x = torch.stack(x)
     y = torch.tensor(y, dtype=torch.float)
-    length = torch.tensor(length, dtype=torch.long)
-    return x, y, length
+    return x, y
 
 def cut_validation(total_data, data_list, shuffle=True, propotion=0.95):
     # data_list contain [x, y, length]

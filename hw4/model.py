@@ -23,6 +23,9 @@ class BaseModel(torch.nn.Module):
     def _softmax(self):
         return torch.nn.Softmax(dim=1)
 
+    def _sigmoid(self):
+        return torch.nn.Sigmoid()
+
     def save(self, filename):
         state_dict = {name:value.cpu() for name, value \
                 in self.state_dict().items()}
@@ -153,3 +156,28 @@ class RNNWord2VecMeanPooling(BaseModel):
         linear_in = torch.cat([mean_rnn_out, trans_hidden, mean_x_embed], dim=1)
         pred = self._linear(linear_in)
         return pred
+
+class DNNBOW(BaseModel):
+    def __init__(self, args, train=True):
+        super(DNNBOW, self).__init__(args)
+        self._init_network()
+        if train == False:
+            self.load(self._load_model_filename)
+
+    def _init_network(self):
+        self._linear = torch.nn.Sequential(
+                    torch.nn.Linear(self._vocabulary_size, 2048),
+                    torch.nn.Dropout(0.5),
+                    self._relu(),
+                    torch.nn.Linear(2048, 256),
+                    torch.nn.Dropout(0.5),
+                    self._relu(),
+                    torch.nn.Linear(256, 32),
+                    torch.nn.Dropout(0.5),
+                    self._relu(),
+                    torch.nn.Linear(32, 1),
+                    self._sigmoid(),
+                )
+    
+    def forward(self, x):
+        return self._linear(x)

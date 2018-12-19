@@ -16,7 +16,6 @@ def train(
         total_data,
         train_x,
         train_y,
-        sentence_length,
         prefix, 
         validation,
         batch_size,
@@ -41,16 +40,16 @@ def train(
     if validation:
         train_data, valid_data = cut_validation(
                 total_data, 
-                [train_x, train_y, sentence_length],
+                [train_x, train_y],
                 shuffle=True)
-        total_train, train_x, train_y, train_length = train_data
-        total_valid, valid_x, valid_y, valid_length = valid_data
+        total_train, train_x, train_y = train_data
+        total_valid, valid_x, valid_y = valid_data
     else:
         total_train = total_data
 
     # make dataset
     dcard_train_dataset = DcardDataset(
-            total_train, train_x, train_y, sentence_length)
+            total_train, train_x, train_y, vocabulary_size)
     train_loader = torch.utils.data.DataLoader(
                 dataset=dcard_train_dataset,
                 batch_size=batch_size,
@@ -59,7 +58,7 @@ def train(
             )
     if validation:
         dcard_valid_dataset = DcardDataset(
-                total_valid, valid_x, valid_y, sentence_length)
+                total_valid, valid_x, valid_y, vocabulary_size)
         valid_loader = torch.utils.data.DataLoader(
                     dataset=dcard_valid_dataset,
                     batch_size=batch_size,
@@ -100,15 +99,15 @@ def train(
     for epoch in range(epoches):
         start_time = time.time()
         total_loss, total_steps, total_accu = 0.0, 0.0, 0.0
-        for step, (x, y, length) in enumerate(train_loader):
+        for step, (x, y) in enumerate(train_loader):
             duration = time.time() - start_time
             sys.stdout.write('\rduration: %06.1f, step: %04d ' \
                     % (duration, step))
             sys.stdout.flush()
             if use_cuda:
-                x, y, length = x.cuda(), y.cuda(), length.cuda()
+                x, y = x.cuda(), y.cuda()
             optimizer.zero_grad()
-            pred_y = my_model.forward(x, length).squeeze()
+            pred_y = my_model.forward(x).squeeze()
             loss = loss_func(pred_y, y)
             loss.backward()
             optimizer.step()
@@ -124,10 +123,10 @@ def train(
             with torch.no_grad():
                 my_model.eval()
                 total_valid_loss, total_valid_accu, total_valid_step = 0, 0, 0
-                for step, (x, y, length) in enumerate(valid_loader):
+                for step, (x, y) in enumerate(valid_loader):
                     if use_cuda:
-                        x, y, length = x.cuda(), y.cuda(), length.cuda()
-                    pred_valid_y = my_model.forward(x, length).squeeze()
+                        x, y = x.cuda(), y.cuda()
+                    pred_valid_y = my_model.forward(x).squeeze()
                     total_valid_loss += float(loss_func(pred_valid_y, y).cpu())
                     pred_valid_y[pred_valid_y >= 0.5] = 1.0
                     pred_valid_y[pred_valid_y < 0.5] = 0.0
@@ -169,15 +168,11 @@ def main():
                 word_dict_filename=args.word_dict_filename)
     train_x = dl.load_data_x(args.train_x_filename)
     train_y = dl.load_data_y(args.train_y_filename)
-    sentence_length = dl.get_sentence_length()
-    #limit = 1000
-    #train_x, train_y, sentence_length = train_x[:limit], train_y[:limit], sentence_length[:limit]
     word_dict_len = dl.get_word_dict_len()
     train(
             total_data=len(train_x),
             train_x=train_x,
             train_y=train_y,
-            sentence_length=sentence_length,
             prefix=args.prefix,
             validation=args.validation,
             batch_size=args.batch_size,
