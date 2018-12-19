@@ -1,0 +1,127 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage{xeCJK, float, graphicx, indentfirst, amsmath, amssymb, physics, multirow, caption, hyperref}
+\usepackage[left=0.5in, right=0.5in]{geometry}
+
+\setCJKmainfont{標楷體}
+
+\author{資工四 B04902131 黃郁凱}
+\title{\vspace{-2cm} Homework 4 Report - \\Malicious Comments Identification}
+
+\begin{document}
+
+\maketitle
+
+\begin{enumerate}
+\item 請說明你實作之 RNN 模型架構及使用的 word embedding 方法,回
+報模型的正確率並繪出訓練曲線。請實作 BOW+DNN 模型,敘述你的模型架構,回報正確率並繪出訓練曲線。\par
+\begin{enumerate}
+    \item RNN\par
+    先將一個句子的每個中文字轉換成one-hot的形式，經過\texttt{torch.nn.Embedding()}，會將每個字轉成一個\texttt{Embedding Dimension}的vector，接著依序送入GRU中，等到GRU吃完最後一個字（<EOS>)，取出其hidden state的vector，flatten過後送入一連串的fully connected layer，並output一個數值，經過\texttt{sigmoid}後就是該句子有惡意的機率。模型總參數為$1.62\cdot 10^{7}$模型的public testing accuracy為$75.2\%$。
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.7\textwidth]{images/ML2018FALL_hw4_RNN.png}
+        \includegraphics[width=0.7\textwidth]{images/learning_curve_rnn.jpg}
+        \caption{上圖為WordEmbedding+RNN的模型架構，下圖為其learning curve。}
+    \end{figure}
+    \item DNN\par
+    先將一個句子的每個中文字轉成one-hot的形式，將句子內所有的one-hot vector相加形成7000多維的integer vector，送入一連串的fully connected layer，並output一個數值，經過\texttt{sigmoid}後就是該句子有惡意的機率。模型總參數為$1.64\cdot 10^{7}$。模型的public testing accuracy為$74.8\%$。
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.7\textwidth]{images/ML2018FALL_hw4_DNN.png}
+        \includegraphics[width=0.7\textwidth]{images/learning_curve_dnn.jpg}
+        \caption{上圖為BOW+DNN的模型架構，下圖為其learning curve。}
+    \end{figure}
+\end{enumerate}
+\item 請敘述你如何 improve performance(preprocess, embedding, 架構等),
+並解釋為何這些做法可以使模型進步。\par
+\begin{itemize}
+    \item 使用mean of word embedding當作FC的feature input\par
+    因為word embedding照理來講可以學到字與字之間關係，因此將所有word的embedding加起來取平均的向量，可以某個程度上代表這個句子想傳達的意思，例如某個髒話的詞重複數遍，那個在這個取平均的vector就會與那個髒話詞較相近，某種程度上讓DNN有更多線索可以判斷是否帶有惡意。正確率從$74.81\%$進步到$74.93\%$。
+    \item 使用mean of hidden state當作FC的feature input\par
+    原本只使用了最後一個時間點的hidden state當作FC的input，然而取用所有平均的hidden state可以傳達更多的訊息，較能代表整個語句的意思；再者，RNN的一個弱點是經過長時間的input會忘掉較先前的段句子傳達的意思，因此會有資訊的損失，在此透過取平均來拿回更多丟失的資訊。正確率從$74.93\%$進步到$75.2\%$。
+\end{itemize}
+\item 請比較不做斷詞 (e.g., 以字為單位) 與有做斷詞,兩種方法實作出來的
+效果差異,並解釋為何有此差別。\par
+
+\item 請比較 RNN 與 BOW 兩種不同 model 對於” 在說別人白痴之前,先想
+想自己” 與” 在說別人之前先想想自己,白痴” 這兩句話的分數(model output),並討論造成差異的原因。\par
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|}\hline
+        model&first sentence&second sentence\\\hline
+        RNN&0&1\\ \hline
+        BOW&1&1\\ \hline
+    \end{tabular}
+\end{table}
+RNN model可以辨別出兩個句子是否惡意，而BOW無法。因為BOW是統計字詞的出現頻率，語意資訊有時候會丟失，例如此兩句就是例子，同樣在句子中出現白痴兩個字，一者有惡意一者沒有，而BOW無法辨別出兩者。RNN model可以多萃取出字詞順序間的關係，能夠有更多資訊判別語意。
+
+\item In this exercise, we will train a binary classifier with AdaBoost algorithm
+on the data shown in the table. Please use decision stump as the base classifier. Perform
+AdaBoost algorithm for $T = 3$ iterations. For each iteration ($t = 1, 2, 3$), write down
+the weights $u^n_t$ used for training, the weighted error rate $\epsilon_t$, scaling coefficient $\alpha_t$, and the classification function $f_t(x)$. The initial weights $u^n_1$ are set to 1 ($n = 0, 1, \cdots, 9$). Please refer to the course slides for the definitions of the above notations. Finally, combine the three classifiers and write down the final classifier.
+\begin{table}[H]
+    \centering
+    \begin{tabular}{c|cccccccccc}\hline
+        x&0&1&2&3&4&5&6&7&8&9\\
+        y&+&-&+&+&+&-&-&+&-&-\\ \hline
+    \end{tabular}
+\end{table}
+
+let $sign(x) = 
+\begin{cases}
+    1&\text{, if } x \geq 0\\
+    -1&\text{, if } x < 0\\
+\end{cases}
+$\par
+$u_0 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]$
+\begin{enumerate}
+    \item T = 1
+    \begin{itemize}
+        \item $f_1(x) = -sign(x-5)$
+        \item $\epsilon_1 = \frac{2}{10} = \frac{1}{5}$
+        \item $\alpha_1 = ln\sqrt{\frac{1-\epsilon}{\epsilon}} \approx 0.693$
+        \item $u_1 = [0.5, 2, 0.5, 0.5, 0.5, 0.5, 0.5, 2, 0.5, 0.5]$
+    \end{itemize}
+    \item T = 2
+    \begin{itemize}
+        \item $f_2(x) = sign(x-2)$
+        \item $\epsilon_2 = \frac{0.5+0+0+0+0+0.5+0.5+0+0.5+0.5}{10} = 0.25$
+        \item $\alpha_2 = ln\sqrt{\frac{1-\epsilon}{\epsilon}} \approx 0.549$
+        \item $u_2 = [0.866, 1.155, 0.289, 0.289, 0.289, 0.866, 0.866, 1.155, 0.866, 0.866]$
+    \end{itemize}
+    \item T = 3
+    \begin{itemize}
+        \item $f_3(x) = -sign(x-1)$
+        \item $\epsilon_3 = \frac{0+0+0.289+0.289+0.289+0+0+1.155+0+0}{10} = 0.202$
+        \item $\alpha_3 = ln\sqrt{\frac{1-\epsilon}{\epsilon}} \approx 0.687$
+        \item $u_3 = [0.436, 0.581, 0.574, 0.574, 0.574, 0.436, 0.436, 2.3, 0.436, 0.436]$
+    \end{itemize}
+    Final classifier: $H(x) = sign(\sum\limits_{i=1}^3 \alpha_i f_i(x)) \approx sign(-0.693sign(x-5) + 0.549 sign(x-2) - 0.687 sign(x-1))$
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{c|cccccccccc}\hline
+            x&0&1&2&3&4&5&6&7&8&9\\
+            y&+&-&+&+&+&-&-&-&-&-\\ \hline
+        \end{tabular}
+    \end{table}
+\end{enumerate}
+
+\item In this exercise, we will simulate the forward pass of a simple LSTM cell. Figure shows a single LSTM cell, where $z$ is the cell input, $z_i$, $z_f$, $z_o$ are the control inputs of the gates, $c$ is the cell memory, and $f$, $g$, $h$ are activation functions. Given an input $x$, the cell input and the control inputs can be calculated by
+\begin{align*}
+    z &= w\cdot x+b\\
+    z_i &= w_i\cdot x+b_i\\
+    z_f &= w_f\cdot x+b_f\\
+    z_o &= w_o\cdot x+b_o\\
+\end{align*}
+Where $w$, $w_i$, $w_f$, $w_o$ are weights and $b$, $b_i$, $b_f$, $b_o$ are biases. The final output can be calculated by
+$$y = f(z_o)h(c')$$
+where the value stored in cell memory is updated by
+$$c′ = f(z_i)g(z) + cf(z_f)$$
+Given an input sequence $x^t$ ($t = 1, 2, \cdots, 8$), please derive the output sequence $y^t$. The input sequence, the weights, and the activation functions are provided below. The initial value in cell memory is $0$. Please note that your calculation process is required to receive full credit.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{images/q6.png}
+\end{figure}
+\end{enumerate}
+\end{document}
