@@ -7,10 +7,20 @@ import random
 class DataLoader():
     def __init__(self, 
             create_word_dict=True, 
+            use_jieba=True,
+            jieba_filename=None,
             filenames=None, 
             word_dict_filename=None,
             save_word_dict=False):
         self.__create_word_dict = create_word_dict
+        if use_jieba:
+            import jieba
+            self.jieba = jieba
+            if jieba_filename is None:
+                raise Exception('Use jieba but word dictionary filename is \
+                    not given.')
+            self._use_jieba = use_jieba
+            jieba.load_userdict(jieba_filename)
         if self.__create_word_dict:
             if filenames is None:
                 raise Exception('"filenames" for creating word dictionary \
@@ -39,6 +49,11 @@ class DataLoader():
         self._word_dict = {'<SOS>': 0, '<EOS>': 1, '<PAD>': 2, '<UNK>': 3}
         for filename in filenames:
             content = self.read_csv(filename)
+            if self._use_jieba:
+                content = self.jieba.cut('\n'.join(content.split('\n')[16:25]))
+                cut = [ele for ele in content]
+                print(cut[:10000])
+                exit()
             for ele in content:
                 if ele not in self._word_dict:
                     self._word_dict[ele] = len(self._word_dict)
@@ -78,11 +93,19 @@ class DataLoader():
 
     def _to_one_hot_value(self, content, max_sentence_len=500):
         print('To word dictionary value...')
-        transformed_content = [[self._word_dict['<SOS>']] + \
-                ([self._word_dict[word] for word in line] \
-                if len(line) <= max_sentence_len-2 else \
-                [self._word_dict[word] for word in line][:max_sentence_len-2]) + \
-                [self._word_dict['<EOS>']] for line in content]
+        if self._use_jieba:
+            transformed_content = [[self._word_dict['<SOS>']] + \
+                    ([self._get_word(word) for word in self.jieba.cut(line)] \
+                    if len(line) <= max_sentence_len-2 else \
+                    [self._get_word(word) for word in \
+                    self.jieba.cut(line)][:max_sentence_len-2]) + \
+                    [self._word_dict['<EOS>']] for line in content]
+        else:
+            transformed_content = [[self._word_dict['<SOS>']] + \
+                    ([self._word_dict[word] for word in line] \
+                    if len(line) <= max_sentence_len-2 else \
+                    [self._word_dict[word] for word in line][:max_sentence_len-2]) + \
+                    [self._word_dict['<EOS>']] for line in content]
         print('Start padding...')
         self._sentence_length = [len(sentence) \
                 for sentence in transformed_content]
@@ -90,6 +113,13 @@ class DataLoader():
         padded_content = self._pad_equal_length(transformed_content,\
                 max_length)
         return padded_content
+
+    def _get_word(self, word):
+        if word in self._word_dict:
+            return self._word_dict[word]
+        else:
+            print('<UNK> word: %s' % word)
+            return self._word_dict['<UNK>']
 
     def _pad_equal_length(self, content, length):
         padded_content = [ele + (length-len(ele))*[self._word_dict['<PAD>']] \

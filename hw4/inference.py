@@ -44,10 +44,12 @@ def infer(
         for i, ele in enumerate(preds):
             f.write('%d,%d\n' % (i, ele))
 
-def get_test_data(filename, word_dict_filename):
+def get_test_data(filename, word_dict_filename, use_jieba, jieba_filename):
     dl = DataLoader(
             create_word_dict=False,
-            word_dict_filename=args.word_dict_filename) 
+            word_dict_filename=args.word_dict_filename,
+            use_jieba=use_jieba,
+            jieba_filename=jieba_filename) 
     test_x = dl.load_data_x(filename)
     sentence_length = dl.get_sentence_length()
     return test_x, sentence_length
@@ -66,12 +68,16 @@ def load_model(model_name, model_filename, args_filename):
 if __name__ == '__main__':
     args = get_args(train=False)
     use_cuda = args.no_cuda
-    test_x, sentence_length = \
-            get_test_data(args.test_x_filename, args.word_dict_filename)
+    test_x, sentence_length = get_test_data(
+                    args.test_x_filename, 
+                    args.word_dict_filename,
+                    use_jieba=args.no_jieba,
+                    jieba_filename=args.jieba_filename)
     total_test = len(test_x)
     test_id = [i for i in range(total_test)]
     my_model = load_model(args.model, args.model_filename, args.args_filename)
     my_model.eval()
+    print('Start infering...')
     infer(
             total_test=total_test,
             test_id=test_id,

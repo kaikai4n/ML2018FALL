@@ -157,13 +157,18 @@ def train(
 def main():
     args = get_args(train=True)
     set_random_seed(args.seed)
+    use_jieba = args.no_jieba
     if args.load_word_dict:
         dl = DataLoader(
                 create_word_dict=False,
-                word_dict_filename=args.word_dict_filename) 
+                word_dict_filename=args.word_dict_filename, 
+                use_jieba=use_jieba,
+                jieba_filename=args.jieba_filename)
     else:
         dl = DataLoader(
                 create_word_dict=True, 
+                use_jieba=use_jieba,
+                jieba_filename=args.jieba_filename,
                 filenames=[args.train_x_filename, args.test_x_filename],
                 save_word_dict=True,
                 word_dict_filename=args.word_dict_filename)

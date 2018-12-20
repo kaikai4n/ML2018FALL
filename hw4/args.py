@@ -44,6 +44,13 @@ def get_args(train=True):
             default='word_dict.pkl',
             help='If "--load_word_dict" is true\
                     then this filename must given.')
+    parser.add_argument('--no_jieba',
+            default=True,
+            action='store_false',
+            help='Set this argument to disable jieba package.')
+    parser.add_argument('--jieba_filename',
+            default='data/dict.txt.big',
+            help='If use jieba package, the dictionary to load.')
     if train:
         parser.add_argument('--validation',
                 action='store_true',
