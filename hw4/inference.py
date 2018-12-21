@@ -72,6 +72,7 @@ if __name__ == '__main__':
     test_id = [i for i in range(total_test)]
     my_model = load_model(args.model, args.model_filename, args.args_filename)
     my_model.eval()
+    print('Start infering...')
     infer(
             total_test=total_test,
             test_id=test_id,
