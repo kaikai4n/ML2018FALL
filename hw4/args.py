@@ -90,21 +90,6 @@ def get_args(train=True):
                         for RNN.')
                 
     else:
-        parser.add_argument('--ensemble',
-                default=False,
-                action='store_true',
-                help='To ensemble models or not, if True, \
-                        type in multiple model names and \
-                        model filenames at \
-                        models and model_filenames.')
-        parser.add_argument('--models',
-                nargs='*',
-                help='When ensemble is True, this argument\
-                        is required.')
-        parser.add_argument('--model_filenames',
-                nargs='*',
-                help='When ensemble is True, this argument\
-                        is required.')
         parser.add_argument('--args_filename',
                 required=True,
                 help='When initializing model, it is neccessary\
@@ -123,21 +108,10 @@ def get_args(train=True):
     if train:
         check_model(args.model)
     else:
-        if args.ensemble:
-            if args.models is None or len(args.models) <= 1 or \
-                    args.model_filenames is None or len(args.model_filenames) <= 1:
-                raise Exception("Ensemble set true, expect to have\
-                        models and model_filenames arguments at least two")
-            elif len(args.models) != len(args.model_filenames):
-                raise Exception("Receive different length of models\
-                        and corresponding model_filenames.")
-            for model_name in args.models:
-                check_model(model_name)
-        else:
-            if args.model is None or args.model_filename is None:
-                raise Exception("Expect to have model and model_filename\
-                        arguments, but not given.")
-            check_model(args.model)
+        if args.model is None or args.model_filename is None:
+            raise Exception("Expect to have model and model_filename\
+                    arguments, but not given.")
+        check_model(args.model)
     return args
 
 
