@@ -17,7 +17,7 @@
 報模型的正確率並繪出訓練曲線。請實作 BOW+DNN 模型,敘述你的模型架構,回報正確率並繪出訓練曲線。\par
 \begin{enumerate}
     \item RNN\par
-    先將一個句子的每個中文字轉換成one-hot的形式，經過\texttt{torch.nn.Embedding()}，會將每個字轉成一個\texttt{Embedding Dimension}的vector，接著依序送入GRU中，等到GRU吃完最後一個字（<EOS>)，取出其hidden state的vector，flatten過後送入一連串的fully connected layer，並output一個數值，經過\texttt{sigmoid}後就是該句子有惡意的機率。模型總參數為$1.62\cdot 10^{7}$模型的public testing accuracy為$75.2\%$。
+    先將一個句子的每個中文字轉換成one-hot的形式，經過\texttt{torch.nn.Embedding()}，會將每個字轉成一個\texttt{Embedding Dimension}的vector，接著依序送入GRU中，等到GRU吃完最後一個字（<EOS>)，取出其hidden state的vector，flatten過後送入一連串的fully connected layer，並output一個數值，經過\texttt{sigmoid}後就是該句子有惡意的機率。模型總參數為$1.62\cdot 10^{7}$模型的public testing accuracy為$75.2\%$，private為$75.1\%$。
     \begin{figure}[H]
         \centering
         \includegraphics[width=0.7\textwidth]{images/ML2018FALL_hw4_RNN.png}
@@ -25,7 +25,7 @@
         \caption{上圖為WordEmbedding+RNN的模型架構，下圖為其learning curve。}
     \end{figure}
     \item DNN\par
-    先將一個句子的每個中文字轉成one-hot的形式，將句子內所有的one-hot vector相加形成7000多維的integer vector，送入一連串的fully connected layer，並output一個數值，經過\texttt{sigmoid}後就是該句子有惡意的機率。模型總參數為$1.64\cdot 10^{7}$。模型的public testing accuracy為$74.8\%$。
+    先將一個句子的每個中文字轉成one-hot的形式，將句子內所有的one-hot vector相加形成7000多維的integer vector，送入一連串的fully connected layer，並output一個數值，經過\texttt{sigmoid}後就是該句子有惡意的機率。模型總參數為$1.64\cdot 10^{7}$。模型的public testing accuracy為$74.8\%$，private為$74.5\%$。
     \begin{figure}[H]
         \centering
         \includegraphics[width=0.7\textwidth]{images/ML2018FALL_hw4_DNN.png}
@@ -43,6 +43,16 @@
 \end{itemize}
 \item 請比較不做斷詞 (e.g., 以字為單位) 與有做斷詞,兩種方法實作出來的
 效果差異,並解釋為何有此差別。\par
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|}\hline
+        有無斷詞&public score&private score\\\hline
+        無&75.2&75.1\\ \hline
+        有&73.8&73.6\\ \hline
+    \end{tabular}
+    \caption{我表現最好的model: RNN，在有無做斷詞下的testing score比較結果。}
+\end{table}
+有無斷詞其實效果差不多，正確率不會有太大的影響，而沒有斷詞的效果略為好。造成這樣的原因，可能是斷詞的的方法可能使語意有誤，例如“我們在野生動物園玩”若切成“我們/在野/生動/物/園/玩“，可能使RNN判斷語意出現錯誤；再者切詞會使字詞頻率減少，進而影響model判斷力，例如“白爛”和“好白爛”會被切成不同的詞，而“好白爛”出現次數相對非常少，RNN model並無法在少量的training data中學會兩者意思是相近的，然而如果每個字切開，那麼RNN model先學到“好”有更加的意思，且“白爛”有惡意，所以下次讀到“好白爛”就學到這句是有惡意的句子，相較於jieba切詞，將所有字都切開讓RNN model有更多自由，可以學到中文真正的意思。
 
 \item 請比較 RNN 與 BOW 兩種不同 model 對於” 在說別人白痴之前,先想
 想自己” 與” 在說別人之前先想想自己,白痴” 這兩句話的分數(model output),並討論造成差異的原因。\par
@@ -74,37 +84,37 @@ let $sign(x) =
     -1&\text{, if } x < 0\\
 \end{cases}
 $\par
-$u_0 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]$
 \begin{enumerate}
     \item T = 1
     \begin{itemize}
+        \item $u_1 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]$
         \item $f_1(x) = -sign(x-5)$
         \item $\epsilon_1 = \frac{2}{10} = \frac{1}{5}$
         \item $\alpha_1 = ln\sqrt{\frac{1-\epsilon}{\epsilon}} \approx 0.693$
-        \item $u_1 = [0.5, 2, 0.5, 0.5, 0.5, 0.5, 0.5, 2, 0.5, 0.5]$
     \end{itemize}
     \item T = 2
     \begin{itemize}
+        \item $u_2 = [0.5, 2, 0.5, 0.5, 0.5, 0.5, 0.5, 2, 0.5, 0.5]$
         \item $f_2(x) = sign(x-2)$
-        \item $\epsilon_2 = \frac{0.5+0+0+0+0+0.5+0.5+0+0.5+0.5}{10} = 0.25$
-        \item $\alpha_2 = ln\sqrt{\frac{1-\epsilon}{\epsilon}} \approx 0.549$
-        \item $u_2 = [0.866, 1.155, 0.289, 0.289, 0.289, 0.866, 0.866, 1.155, 0.866, 0.866]$
+        \item $\epsilon_2 = \frac{0.5+0+0+0+0+0.5+0.5+0+0.5+0.5}{8} = 0.31$
+        \item $\alpha_2 = ln\sqrt{\frac{1-\epsilon}{\epsilon}} \approx 0.394$
     \end{itemize}
     \item T = 3
     \begin{itemize}
+        \item $u_3 = [0.742, 1.348, 0.337, 0.337, 0.337, 0.742, 0.742, 1.348, 0.742, 0.742]$
         \item $f_3(x) = -sign(x-1)$
-        \item $\epsilon_3 = \frac{0+0+0.289+0.289+0.289+0+0+1.155+0+0}{10} = 0.202$
-        \item $\alpha_3 = ln\sqrt{\frac{1-\epsilon}{\epsilon}} \approx 0.687$
-        \item $u_3 = [0.436, 0.581, 0.574, 0.574, 0.574, 0.436, 0.436, 2.3, 0.436, 0.436]$
+        \item $\epsilon_3 = \frac{0+0+0.337+0.337+0.337+0+0+1.348+0+0}{7.417} = 0.318$
+        \item $\alpha_3 = ln\sqrt{\frac{1-\epsilon}{\epsilon}} \approx 0.381$
     \end{itemize}
-    Final classifier: $H(x) = sign(\sum\limits_{i=1}^3 \alpha_i f_i(x)) \approx sign(-0.693sign(x-5) + 0.549 sign(x-2) - 0.687 sign(x-1))$
+    Final classifier: $H(x) = sign(\sum\limits_{i=1}^3 \alpha_i f_i(x)) \approx sign(-0.693sign(x-5) + 0.394 sign(x-2) - 0.381 sign(x-1))$
     \begin{table}[H]
         \centering
         \begin{tabular}{c|cccccccccc}\hline
             x&0&1&2&3&4&5&6&7&8&9\\
             y&+&-&+&+&+&-&-&-&-&-\\ \hline
         \end{tabular}
-    \end{table}
+    \end{table}\par
+    error = $0.1$
 \end{enumerate}
 
 \item In this exercise, we will simulate the forward pass of a simple LSTM cell. Figure shows a single LSTM cell, where $z$ is the cell input, $z_i$, $z_f$, $z_o$ are the control inputs of the gates, $c$ is the cell memory, and $f$, $g$, $h$ are activation functions. Given an input $x$, the cell input and the control inputs can be calculated by
@@ -117,11 +127,23 @@ $u_0 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]$
 Where $w$, $w_i$, $w_f$, $w_o$ are weights and $b$, $b_i$, $b_f$, $b_o$ are biases. The final output can be calculated by
 $$y = f(z_o)h(c')$$
 where the value stored in cell memory is updated by
-$$c′ = f(z_i)g(z) + cf(z_f)$$
+$$c' = f(z_i)g(z) + cf(z_f)$$
 Given an input sequence $x^t$ ($t = 1, 2, \cdots, 8$), please derive the output sequence $y^t$. The input sequence, the weights, and the activation functions are provided below. The initial value in cell memory is $0$. Please note that your calculation process is required to receive full credit.
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{images/q6.png}
 \end{figure}
+\begin{tabular}{|l|p{1.8cm}|p{1cm}|p{1cm}|p{1cm}|p{1cm}|p{1cm}|p{1.8cm}|p{1cm}|p{1cm}|}\hline
+    Time step & $z=g(z)$ & $z_i$ & $z_f$ & $z_o$ & $f(z_i)$ & $cf(z_f)$ & $c'=h(c')$ & $f(z_o)$ & $y$ \\ \hline
+	1&3&90&10&-10&1.00&0.00&3.00&0.00&0.00\\ \hline
+	2&-2&90&10&90&1.00&3.00&1.00&1.00&1.00\\ \hline
+	3&4&190&-90&90&1.00&0.00&4.00&1.00&4.00\\ \hline
+	4&0&90&10&90&1.00&4.00&4.00&1.00&4.00\\ \hline
+	5&2&90&10&-10&1.00&4.00&6.00&0.00&0.00\\ \hline
+	6&-4&-10&110&90&0.00&6.00&6.00&1.00&6.00\\ \hline
+	7&1&190&-90&90&1.00&0.00&1.00&1.00&1.00\\ \hline
+	8&2&90&10&90&1.00&1.00&3.00&1.00&3.00\\ \hline
+\end{tabular}
+
 \end{enumerate}
 \end{document}
