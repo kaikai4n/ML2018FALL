@@ -7,3 +7,7 @@ pandas==0.23.4
 ```
 bash test.sh <testing_options> <testing_data/feat> <output file>
 ```
+For example,
+```
+bash test.sh data/testing_options.csv data/testing_data/feat/ TA_output.csv
+```
